@@ -419,6 +419,22 @@ app.get('/api/branch-sales', async (req, res) => {
   }
 });
 
+app.get("/api/top-salespersons", async (req, res) => {
+  try {
+    const pool = await sql.connect(config);
+    const result = await pool.request().query(`
+      SELECT TOP 10 SALESPERSON, SUM(SALES) AS total_sales
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALESPERSON IS NOT NULL AND SALESPERSON <> ''
+      GROUP BY SALESPERSON
+      ORDER BY total_sales DESC
+    `);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("❌ Top Salespersons error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
      app.listen(PORT, () => {
