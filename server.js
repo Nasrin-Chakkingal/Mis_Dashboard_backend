@@ -60,15 +60,14 @@ function getDateGrouping(filter) {
 
     app.get('/api/monthly-sales', async (req, res) => {
   try {
-    const { supplier, brand_code, division_code, type_code,fromDate, toDate } = req.query;
+    const { supplier, brand_code, division_code, type_code } = req.query;
 
     const request = pool.request();
     if (supplier) request.input('supplier', sql.VarChar, supplier);
     if (brand_code) request.input('brand_code', sql.VarChar, brand_code);
     if (division_code) request.input('division_code', sql.VarChar, division_code);
     if (type_code) request.input('type_code', sql.VarChar, type_code);
-    if (fromDate) request.input('fromDate', sql.Date, fromDate);
-    if (toDate) request.input('toDate', sql.Date, toDate);
+   
 
     const query = `
       SELECT 
@@ -81,8 +80,6 @@ function getDateGrouping(filter) {
         ${brand_code ? "AND BRAND_CODE = @brand_code" : ""}
         ${division_code ? "AND DIVISION_CODE = @division_code" : ""}
         ${type_code ? "AND TYPE_CODE = @type_code" : ""}
-        ${fromDate ? "AND VOCDATE >= @fromDate" : ""}
-        ${toDate ? "AND VOCDATE <= @toDate" : ""}
       GROUP BY FORMAT(VOCDATE, 'MMMM'), MONTH(VOCDATE)
       ORDER BY MONTH(VOCDATE);
     `;
