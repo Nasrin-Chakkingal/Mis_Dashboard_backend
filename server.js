@@ -60,18 +60,20 @@ function getDateGrouping(filter) {
 
     app.get('/api/monthly-sales', async (req, res) => {
   try {
-    const { supplier, brand_code, division_code, type_code } = req.query;
+    const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
 
     const request = pool.request();
     if (supplier) request.input('supplier', sql.VarChar, supplier);
     if (brand_code) request.input('brand_code', sql.VarChar, brand_code);
     if (division_code) request.input('division_code', sql.VarChar, division_code);
     if (type_code) request.input('type_code', sql.VarChar, type_code);
-   
+    if (fromDate) request.input('fromDate', sql.Date, fromDate);
+    if (toDate) request.input('toDate', sql.Date, toDate);
 
     const query = `
       SELECT 
         FORMAT(VOCDATE, 'MMMM') AS month,
+        MONTH(VOCDATE) AS month_order,
         SUM(SALES) AS rawSales,
         SUM(COGS) AS rawCost
       FROM MIS_DASHBOARD_TBL
@@ -80,6 +82,8 @@ function getDateGrouping(filter) {
         ${brand_code ? "AND BRAND_CODE = @brand_code" : ""}
         ${division_code ? "AND DIVISION_CODE = @division_code" : ""}
         ${type_code ? "AND TYPE_CODE = @type_code" : ""}
+        ${fromDate ? "AND VOCDATE >= @fromDate" : ""}
+        ${toDate ? "AND VOCDATE <= @toDate" : ""}
       GROUP BY FORMAT(VOCDATE, 'MMMM'), MONTH(VOCDATE)
       ORDER BY MONTH(VOCDATE);
     `;
@@ -90,22 +94,21 @@ function getDateGrouping(filter) {
     const divisor = totalSales < 1000000 ? 1000 : 1000000;
     const unit = divisor === 1000 ? 'K' : 'M';
 
-   const data = rawResult.recordset.map(row => {
-  const sales = row.rawSales / divisor;
-  const cost = row.rawCost / divisor;
-  const grossMargin = sales - cost;
-  const profitPct = row.rawSales > 0
-    ? Number(((row.rawSales - row.rawCost) * 100 / row.rawSales).toFixed(2))
-    : 0;
+    const data = rawResult.recordset.map(row => {
+      const sales = row.rawSales / divisor;
+      const cost = row.rawCost / divisor;
+      const grossMargin = sales - cost;
+      const profitPct = row.rawSales > 0
+        ? Number(((row.rawSales - row.rawCost) * 100 / row.rawSales).toFixed(2))
+        : 0;
 
-  return {
-    month: row.month,
-    sales,
-    grossMargin,     // ✅ keep only this, remove `cost`
-    profitPct
-  };
-});
-
+      return {
+        month: row.month,
+        sales,
+        grossMargin,
+        profitPct
+      };
+    });
 
     res.json({ unit, data });
 
@@ -119,13 +122,15 @@ function getDateGrouping(filter) {
 app.get("/api/avg-selling-price", async (req, res) => {
   const filter = req.query.filter || "monthly";
   const { groupBy, label, sort } = getDateGrouping(filter);
-  const { supplier, brand_code, division_code, type_code } = req.query;
+  const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
 
   let filters = "";
   if (supplier) filters += " AND SUPPLIER = @supplier";
   if (brand_code) filters += " AND BRAND_CODE = @brand_code";
   if (division_code) filters += " AND DIVISION_CODE = @division_code";
   if (type_code) filters += " AND TYPE_CODE = @type_code";
+  if (fromDate) filters += " AND VOCDATE >= @fromDate";
+  if (toDate) filters += " AND VOCDATE <= @toDate";
 
   const query = `
     SELECT ${label} AS label,
@@ -144,6 +149,8 @@ app.get("/api/avg-selling-price", async (req, res) => {
     if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
     if (division_code) request.input("division_code", sql.VarChar, division_code);
     if (type_code) request.input("type_code", sql.VarChar, type_code);
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
 
     const result = await request.query(query);
     res.json({ data: result.recordset });
@@ -154,42 +161,56 @@ app.get("/api/avg-selling-price", async (req, res) => {
 });
 
 
+
 app.get("/api/customer-trend", async (req, res) => {
   try {
-    const result = await pool.request().query(`
-      WITH FirstPurchase AS (
-      SELECT CUSTOMER, MIN(VOCDATE) AS FirstPurchaseDate
-      FROM MIS_DASHBOARD_TBL
-      WHERE CUSTOMER IS NOT NULL
-      GROUP BY CUSTOMER
-      )
+    const { fromDate, toDate } = req.query;
 
-     SELECT
-     FORMAT(DATEFROMPARTS(YEAR(D.VOCDATE), MONTH(D.VOCDATE), 1), 'MMM') AS month,
-     MONTH(D.VOCDATE) AS month_order,
-     COUNT(DISTINCT D.CUSTOMER) AS total_customers,
-     COUNT(DISTINCT CASE WHEN F.FirstPurchaseDate = D.VOCDATE THEN D.CUSTOMER END) AS new_customers
-     FROM MIS_DASHBOARD_TBL D
-     LEFT JOIN FirstPurchase F ON D.CUSTOMER = F.CUSTOMER
-     WHERE D.CUSTOMER IS NOT NULL
-     GROUP BY YEAR(D.VOCDATE), MONTH(D.VOCDATE)
-     ORDER BY YEAR(D.VOCDATE), MONTH(D.VOCDATE);`);
-     res.json({ data: result.recordset });
-    } catch (err) {
+    const request = pool.request();
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+
+    const query = `
+      WITH FirstPurchase AS (
+        SELECT CUSTOMER, MIN(VOCDATE) AS FirstPurchaseDate
+        FROM MIS_DASHBOARD_TBL
+        WHERE CUSTOMER IS NOT NULL
+        GROUP BY CUSTOMER
+      )
+      SELECT
+        FORMAT(DATEFROMPARTS(YEAR(D.VOCDATE), MONTH(D.VOCDATE), 1), 'MMM') AS month,
+        MONTH(D.VOCDATE) AS month_order,
+        COUNT(DISTINCT D.CUSTOMER) AS total_customers,
+        COUNT(DISTINCT CASE WHEN F.FirstPurchaseDate = D.VOCDATE THEN D.CUSTOMER END) AS new_customers
+      FROM MIS_DASHBOARD_TBL D
+      LEFT JOIN FirstPurchase F ON D.CUSTOMER = F.CUSTOMER
+      WHERE D.CUSTOMER IS NOT NULL
+        AND (@fromDate IS NULL OR D.VOCDATE >= @fromDate)
+        AND (@toDate IS NULL OR D.VOCDATE <= @toDate)
+      GROUP BY YEAR(D.VOCDATE), MONTH(D.VOCDATE)
+      ORDER BY YEAR(D.VOCDATE), MONTH(D.VOCDATE);
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
     console.error("❌ Customer trend error:", err);
     res.status(500).json({ error: "Internal Server Error" });
-    }
+  }
 });
 
+
 app.get("/api/qty-sold", async (req, res) => {
-  const { supplier, brand_code, division_code, type_code } = req.query;
+  const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
 
   // Dynamically build WHERE conditions
-  let filters = "";
+  let filters = "WHERE PIECES IS NOT NULL";
   if (supplier) filters += " AND SUPPLIER = @supplier";
   if (brand_code) filters += " AND BRAND_CODE = @brand_code";
   if (division_code) filters += " AND DIVISION_CODE = @division_code";
   if (type_code) filters += " AND TYPE_CODE = @type_code";
+  if (fromDate) filters += " AND VOCDATE >= @fromDate";
+  if (toDate) filters += " AND VOCDATE <= @toDate";
 
   const query = `
     SELECT 
@@ -197,7 +218,6 @@ app.get("/api/qty-sold", async (req, res) => {
       MONTH(VOCDATE) AS month_order,
       SUM(PIECES) AS qty_sold
     FROM MIS_DASHBOARD_TBL
-    WHERE PIECES IS NOT NULL
     ${filters}
     GROUP BY FORMAT(VOCDATE, 'MMMM'), MONTH(VOCDATE)
     ORDER BY MONTH(VOCDATE);
@@ -206,11 +226,12 @@ app.get("/api/qty-sold", async (req, res) => {
   try {
     const request = pool.request();
 
-    // Bind parameters only if provided
     if (supplier) request.input("supplier", sql.VarChar, supplier);
     if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
     if (division_code) request.input("division_code", sql.VarChar, division_code);
     if (type_code) request.input("type_code", sql.VarChar, type_code);
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
 
     const result = await request.query(query);
     res.json({ data: result.recordset });
@@ -219,6 +240,7 @@ app.get("/api/qty-sold", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
 // ✅ Route: Dashboard Summary Cards
@@ -357,45 +379,99 @@ app.get("/api/filter-options", async (req, res) => {
 
 app.get("/api/pieces", async (req, res) => {
   try {
-    const result = await pool.request().query(`
+    const pool = await sql.connect(config);
+    const request = pool.request();
+    const { fromDate, toDate, supplier, branch_code, division_code } = req.query;
+
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+    if (supplier) request.input("supplier", sql.VarChar, supplier);
+    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+
+    const query = `
       SELECT AgeBucket, SUM(PIECES) AS total_pieces
       FROM MIS_DASHBOARD_TBL
-      WHERE  AgeBucket IS NOT NULL AND AgeBucket != 'NA'
+      WHERE 
+        AgeBucket IS NOT NULL AND AgeBucket != 'NA' AND
+        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
+        (@toDate IS NULL OR VOCDATE <= @toDate) AND
+        (@supplier IS NULL OR SUPPLIER = @supplier) AND
+        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
+        (@division_code IS NULL OR DIVISION_CODE = @division_code)
       GROUP BY AgeBucket
       ORDER BY AgeBucket;
-    `);
+    `;
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (err) {
-    console.error("Error in /api/pieces-agebucket:", err);
+    console.error("Error in /api/pieces:", err);
     res.status(500).send("Internal Server Error");
   }
 });
 
+
  app.get('/api/top-brands', async (req, res) => {
     try {
-      const result = await pool.request().query(`
-        SELECT TOP 6 BRAND_CODE AS brand, SUM(SALES) AS total_sale
-        FROM MIS_DASHBOARD_TBL
-        WHERE  BRAND_CODE IS NOT NULL AND BRAND_CODE != ''
-        GROUP BY BRAND_CODE
-        ORDER BY SUM(SALES) DESC`);
-      res.json(result.recordset);
-    } catch (err) {
-      console.error("❌ Brand-wise sales error:", err);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  });
+      const pool = await sql.connect(config);
+    const request = pool.request();
+    const { fromDate, toDate, supplier, branch_code, division_code } = req.query;
+
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+    if (supplier) request.input("supplier", sql.VarChar, supplier);
+    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+
+      const query = `SELECT TOP 6 BRAND_CODE AS brand, SUM(SALES) AS total_sale
+FROM MIS_DASHBOARD_TBL
+WHERE 
+  BRAND_CODE IS NOT NULL AND BRAND_CODE != '' AND
+  (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
+  (@toDate IS NULL OR VOCDATE <= @toDate) AND
+  (@supplier IS NULL OR SUPPLIER = @supplier) AND
+  (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
+  (@division_code IS NULL OR DIVISION_CODE = @division_code)
+GROUP BY BRAND_CODE
+ORDER BY total_sale DESC`;
+      const result = await request.query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching top brands:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 
   app.get('/api/supplier-sales', async (req, res) => {
   try {
-    const result = await pool.request().query(`
-      SELECT top 6 supplier, SUM(SALES) AS total_sales
-FROM MIS_DASHBOARD_TBL
-WHERE supplier IS NOT NULL AND supplier != ''
-GROUP BY supplier
-ORDER BY SUM(SALES) DESC
-    `);
+    const pool = await sql.connect(config);
+    const request = pool.request();
+
+    const { fromDate, toDate, branch_code, division_code, type_code } = req.query;
+
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+    if (type_code) request.input("type_code", sql.VarChar, type_code);
+
+    const query = `
+      SELECT TOP 6 supplier, SUM(SALES) AS total_sales
+      FROM MIS_DASHBOARD_TBL
+      WHERE 
+        supplier IS NOT NULL AND supplier != '' AND
+        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
+        (@toDate IS NULL OR VOCDATE <= @toDate) AND
+        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
+        (@division_code IS NULL OR DIVISION_CODE = @division_code) AND
+        (@type_code IS NULL OR TYPE_CODE = @type_code)
+      GROUP BY supplier
+      ORDER BY total_sales DESC
+    `;
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (err) {
     console.error("❌ Supplier-wise sales error:", err);
@@ -404,15 +480,35 @@ ORDER BY SUM(SALES) DESC
 });
 
 
+
 app.get('/api/branch-sales', async (req, res) => {
   try {
-    const result = await pool.request().query(`
-      SELECT top 7 [BRANCH NAME] AS branch, SUM(SALES) AS total_sales
+    const pool = await sql.connect(config);
+    const request = pool.request();
+
+    const { fromDate, toDate, branch_code, division_code, type_code } = req.query;
+
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+    if (type_code) request.input("type_code", sql.VarChar, type_code);
+
+    const query = `
+      SELECT TOP 7 [BRANCH NAME] AS branch, SUM(SALES) AS total_sales
       FROM MIS_DASHBOARD_TBL
-      WHERE [BRANCH NAME] IS NOT NULL
+      WHERE 
+        [BRANCH NAME] IS NOT NULL AND
+        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
+        (@toDate IS NULL OR VOCDATE <= @toDate) AND
+        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
+        (@division_code IS NULL OR DIVISION_CODE = @division_code) AND
+        (@type_code IS NULL OR TYPE_CODE = @type_code)
       GROUP BY [BRANCH NAME]
-      ORDER BY SUM(SALES) DESC
-    `);
+      ORDER BY total_sales DESC
+    `;
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (err) {
     console.error("❌ Branch-wise sales error:", err);
@@ -420,18 +516,37 @@ app.get('/api/branch-sales', async (req, res) => {
   }
 });
 
+
 app.get("/api/top-salespersons", async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query(`
+    const request = pool.request();
+
+    const { fromDate, toDate, branch_code, division_code, supplier } = req.query;
+
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+    if (supplier) request.input("supplier", sql.VarChar, supplier);
+
+    const query = `
       SELECT TOP 6 
-  SALESPERSON AS salesperson, 
-  SUM(SALES) AS total_sales
-FROM MIS_DASHBOARD_TBL
-WHERE SALESPERSON IS NOT NULL AND SALESPERSON <> ''
-GROUP BY SALESPERSON
-ORDER BY total_sales DESC
-    `);
+        SALESPERSON AS salesperson, 
+        SUM(SALES) AS total_sales
+      FROM MIS_DASHBOARD_TBL
+      WHERE 
+        SALESPERSON IS NOT NULL AND SALESPERSON <> '' AND
+        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
+        (@toDate IS NULL OR VOCDATE <= @toDate) AND
+        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
+        (@division_code IS NULL OR DIVISION_CODE = @division_code) AND
+        (@supplier IS NULL OR SUPPLIER = @supplier)
+      GROUP BY SALESPERSON
+      ORDER BY total_sales DESC
+    `;
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (err) {
     console.error("❌ Top Salespersons error:", err);
