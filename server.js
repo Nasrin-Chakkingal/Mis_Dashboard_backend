@@ -381,6 +381,7 @@ app.get("/api/pieces", async (req, res) => {
   try {
     
     const { fromDate, toDate, supplier, brand_code, division_code } = req.query;
+    const pool = await sql.connect(config);
 const request = pool.request();
     if (fromDate) request.input("fromDate", sql.Date, fromDate);
     if (toDate) request.input("toDate", sql.Date, toDate);
