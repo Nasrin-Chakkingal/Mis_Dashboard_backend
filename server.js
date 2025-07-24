@@ -379,14 +379,13 @@ app.get("/api/filter-options", async (req, res) => {
 
 app.get("/api/pieces", async (req, res) => {
   try {
-    const pool = await sql.connect(config);
-    const request = pool.request();
-    const { fromDate, toDate, supplier, branch_code, division_code } = req.query;
-
+    
+    const { fromDate, toDate, supplier, brand_code, division_code } = req.query;
+const request = pool.request();
     if (fromDate) request.input("fromDate", sql.Date, fromDate);
     if (toDate) request.input("toDate", sql.Date, toDate);
     if (supplier) request.input("supplier", sql.VarChar, supplier);
-    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
+    if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
     if (division_code) request.input("division_code", sql.VarChar, division_code);
 
     const query = `
@@ -397,7 +396,7 @@ app.get("/api/pieces", async (req, res) => {
         (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
         (@toDate IS NULL OR VOCDATE <= @toDate) AND
         (@supplier IS NULL OR SUPPLIER = @supplier) AND
-        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
+        (@brand_code IS NULL OR BRAND_CODE = @brand_code) AND
         (@division_code IS NULL OR DIVISION_CODE = @division_code)
       GROUP BY AgeBucket
       ORDER BY AgeBucket;
