@@ -172,23 +172,26 @@ app.get("/api/customer-trend", async (req, res) => {
 
     const query = `
       WITH FirstPurchase AS (
-        SELECT CUSTOMER, MIN(VOCDATE) AS FirstPurchaseDate
+        SELECT 
+          CUSTOMER, 
+          MIN(VOCDATE) AS FirstPurchaseDate
         FROM MIS_DASHBOARD_TBL
         WHERE CUSTOMER IS NOT NULL
+        ${fromDate ? "AND VOCDATE >= @fromDate" : ""}
+        ${toDate ? "AND VOCDATE <= @toDate" : ""}
         GROUP BY CUSTOMER
       )
-      SELECT
-        FORMAT(DATEFROMPARTS(YEAR(D.VOCDATE), MONTH(D.VOCDATE), 1), 'MMM') AS month,
-        MONTH(D.VOCDATE) AS month_order,
-        COUNT(DISTINCT D.CUSTOMER) AS total_customers,
-        COUNT(DISTINCT CASE WHEN F.FirstPurchaseDate = D.VOCDATE THEN D.CUSTOMER END) AS new_customers
-      FROM MIS_DASHBOARD_TBL D
-      LEFT JOIN FirstPurchase F ON D.CUSTOMER = F.CUSTOMER
-      WHERE D.CUSTOMER IS NOT NULL
-        AND (@fromDate IS NULL OR D.VOCDATE >= @fromDate)
-        AND (@toDate IS NULL OR D.VOCDATE <= @toDate)
-      GROUP BY YEAR(D.VOCDATE), MONTH(D.VOCDATE)
-      ORDER BY YEAR(D.VOCDATE), MONTH(D.VOCDATE);
+      SELECT 
+        FORMAT(m.VOCDATE, 'yyyy-MM') AS Month,
+        COUNT(DISTINCT CASE WHEN m.VOCDATE = f.FirstPurchaseDate THEN m.CUSTOMER END) AS NewCustomers,
+        COUNT(DISTINCT CASE WHEN m.VOCDATE > f.FirstPurchaseDate THEN m.CUSTOMER END) AS ReturningCustomers
+      FROM MIS_DASHBOARD_TBL m
+      INNER JOIN FirstPurchase f ON m.CUSTOMER = f.CUSTOMER
+      WHERE m.CUSTOMER IS NOT NULL
+        ${fromDate ? "AND m.VOCDATE >= @fromDate" : ""}
+        ${toDate ? "AND m.VOCDATE <= @toDate" : ""}
+      GROUP BY FORMAT(m.VOCDATE, 'yyyy-MM')
+      ORDER BY Month;
     `;
 
     const result = await request.query(query);
@@ -198,6 +201,7 @@ app.get("/api/customer-trend", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
 app.get("/api/qty-sold", async (req, res) => {
