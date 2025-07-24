@@ -378,181 +378,194 @@ app.get("/api/filter-options", async (req, res) => {
  
 
 app.get("/api/pieces", async (req, res) => {
-  try {
-    
-    const { fromDate, toDate, supplier, brand_code, division_code } = req.query;
-    const pool = await sql.connect(config);
-const request = pool.request();
-    if (fromDate) request.input("fromDate", sql.Date, fromDate);
-    if (toDate) request.input("toDate", sql.Date, toDate);
+  const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
+
+   let filters = "WHERE AgeBucket IS NOT NULL AND AgeBucket != 'NA'";
+  if (supplier) filters += " AND SUPPLIER = @supplier";
+  if (brand_code) filters += " AND BRAND_CODE = @brand_code";
+  if (division_code) filters += " AND DIVISION_CODE = @division_code";
+  if (type_code) filters += " AND TYPE_CODE = @type_code";
+  if (fromDate) filters += " AND VOCDATE >= @fromDate";
+  if (toDate) filters += " AND VOCDATE <= @toDate";
+
+  const query = `SELECT AgeBucket, SUM(PIECES) AS total_pieces
+      FROM MIS_DASHBOARD_TBL
+      ${filters}
+       GROUP BY AgeBucket
+      ORDER BY AgeBucket;`;
+
+try {
+    const request = pool.request();
+
     if (supplier) request.input("supplier", sql.VarChar, supplier);
     if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
     if (division_code) request.input("division_code", sql.VarChar, division_code);
-
-    const query = `
-      SELECT AgeBucket, SUM(PIECES) AS total_pieces
-      FROM MIS_DASHBOARD_TBL
-      WHERE 
-        AgeBucket IS NOT NULL AND AgeBucket != 'NA' AND
-        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
-        (@toDate IS NULL OR VOCDATE <= @toDate) AND
-        (@supplier IS NULL OR SUPPLIER = @supplier) AND
-        (@brand_code IS NULL OR BRAND_CODE = @brand_code) AND
-        (@division_code IS NULL OR DIVISION_CODE = @division_code)
-      GROUP BY AgeBucket
-      ORDER BY AgeBucket;
-    `;
+    if (type_code) request.input("type_code", sql.VarChar, type_code);
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
 
     const result = await request.query(query);
-    res.json(result.recordset);
+    res.json({ data: result.recordset });
   } catch (err) {
     console.error("Error in /api/pieces:", err);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
+    
+    
 
- app.get('/api/top-brands', async (req, res) => {
-    try {
-      const pool = await sql.connect(config);
+app.get("/api/top-brands", async (req, res) => {
+  const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
+
+   let filters = "WHERE BRAND_CODE IS NOT NULL AND BRAND_CODE != ''";
+  if (supplier) filters += " AND SUPPLIER = @supplier";
+  if (brand_code) filters += " AND BRAND_CODE = @brand_code";
+  if (division_code) filters += " AND DIVISION_CODE = @division_code";
+  if (type_code) filters += " AND TYPE_CODE = @type_code";
+  if (fromDate) filters += " AND VOCDATE >= @fromDate";
+  if (toDate) filters += " AND VOCDATE <= @toDate";
+
+  const query = `SELECT TOP 6 BRAND_CODE AS brand, SUM(SALES) AS total_sale
+                 FROM MIS_DASHBOARD_TBL
+                 ${filters}
+                 GROUP BY BRAND_CODE
+                 ORDER BY total_sale DESC;`;
+
+try {
     const request = pool.request();
-    const { fromDate, toDate, supplier, branch_code, division_code } = req.query;
 
+    if (supplier) request.input("supplier", sql.VarChar, supplier);
+    if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+    if (type_code) request.input("type_code", sql.VarChar, type_code);
     if (fromDate) request.input("fromDate", sql.Date, fromDate);
     if (toDate) request.input("toDate", sql.Date, toDate);
-    if (supplier) request.input("supplier", sql.VarChar, supplier);
-    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
-    if (division_code) request.input("division_code", sql.VarChar, division_code);
 
-      const query = `SELECT TOP 6 BRAND_CODE AS brand, SUM(SALES) AS total_sale
-FROM MIS_DASHBOARD_TBL
-WHERE 
-  BRAND_CODE IS NOT NULL AND BRAND_CODE != '' AND
-  (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
-  (@toDate IS NULL OR VOCDATE <= @toDate) AND
-  (@supplier IS NULL OR SUPPLIER = @supplier) AND
-  (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
-  (@division_code IS NULL OR DIVISION_CODE = @division_code)
-GROUP BY BRAND_CODE
-ORDER BY total_sale DESC`;
-      const result = await request.query(query);
-    res.json(result.recordset);
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
   } catch (err) {
-    console.error("Error fetching top brands:", err);
+    console.error("Error fetching top brands", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+ 
+    
+      
+
+  app.get('/api/supplier-sales', async (req, res) => {
+    const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
+    
+    let filters = "WHERE supplier IS NOT NULL AND supplier != '' ";
+  if (supplier) filters += " AND SUPPLIER = @supplier";
+  if (brand_code) filters += " AND BRAND_CODE = @brand_code";
+  if (division_code) filters += " AND DIVISION_CODE = @division_code";
+  if (type_code) filters += " AND TYPE_CODE = @type_code";
+  if (fromDate) filters += " AND VOCDATE >= @fromDate";
+  if (toDate) filters += " AND VOCDATE <= @toDate";
+
+  const query = `
+      SELECT TOP 6 supplier, SUM(SALES) AS total_sales
+      FROM MIS_DASHBOARD_TBL
+      ${filters}
+      GROUP BY supplier
+      ORDER BY total_sales DESC;
+    `;
+
+    try {
+    const request = pool.request();
+
+    if (supplier) request.input("supplier", sql.VarChar, supplier);
+    if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+    if (type_code) request.input("type_code", sql.VarChar, type_code);
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("Error fetching top brands", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 
-  app.get('/api/supplier-sales', async (req, res) => {
-  try {
-    const pool = await sql.connect(config);
-    const request = pool.request();
-
-    const { fromDate, toDate, branch_code, division_code, type_code } = req.query;
-
-    if (fromDate) request.input("fromDate", sql.Date, fromDate);
-    if (toDate) request.input("toDate", sql.Date, toDate);
-    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
-    if (division_code) request.input("division_code", sql.VarChar, division_code);
-    if (type_code) request.input("type_code", sql.VarChar, type_code);
-
-    const query = `
-      SELECT TOP 6 supplier, SUM(SALES) AS total_sales
-      FROM MIS_DASHBOARD_TBL
-      WHERE 
-        supplier IS NOT NULL AND supplier != '' AND
-        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
-        (@toDate IS NULL OR VOCDATE <= @toDate) AND
-        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
-        (@division_code IS NULL OR DIVISION_CODE = @division_code) AND
-        (@type_code IS NULL OR TYPE_CODE = @type_code)
-      GROUP BY supplier
-      ORDER BY total_sales DESC
-    `;
-
-    const result = await request.query(query);
-    res.json(result.recordset);
-  } catch (err) {
-    console.error("❌ Supplier-wise sales error:", err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-
-
 app.get('/api/branch-sales', async (req, res) => {
-  try {
-    const pool = await sql.connect(config);
-    const request = pool.request();
 
-    const { fromDate, toDate, branch_code, division_code, type_code } = req.query;
+    const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
 
-    if (fromDate) request.input("fromDate", sql.Date, fromDate);
-    if (toDate) request.input("toDate", sql.Date, toDate);
-    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
-    if (division_code) request.input("division_code", sql.VarChar, division_code);
-    if (type_code) request.input("type_code", sql.VarChar, type_code);
-
+    let filters = "WHERE [BRANCH NAME] IS NOT NULL ";
+  if (supplier) filters += " AND SUPPLIER = @supplier";
+  if (brand_code) filters += " AND BRAND_CODE = @brand_code";
+  if (division_code) filters += " AND DIVISION_CODE = @division_code";
+  if (type_code) filters += " AND TYPE_CODE = @type_code";
+  if (fromDate) filters += " AND VOCDATE >= @fromDate";
+  if (toDate) filters += " AND VOCDATE <= @toDate";
     const query = `
       SELECT TOP 7 [BRANCH NAME] AS branch, SUM(SALES) AS total_sales
       FROM MIS_DASHBOARD_TBL
-      WHERE 
-        [BRANCH NAME] IS NOT NULL AND
-        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
-        (@toDate IS NULL OR VOCDATE <= @toDate) AND
-        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
-        (@division_code IS NULL OR DIVISION_CODE = @division_code) AND
-        (@type_code IS NULL OR TYPE_CODE = @type_code)
+      ${filters}
       GROUP BY [BRANCH NAME]
       ORDER BY total_sales DESC
     `;
+try {
+    const request = pool.request();
+
+    if (supplier) request.input("supplier", sql.VarChar, supplier);
+    if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+    if (type_code) request.input("type_code", sql.VarChar, type_code);
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
 
     const result = await request.query(query);
-    res.json(result.recordset);
+    res.json({ data: result.recordset });
   } catch (err) {
     console.error("❌ Branch-wise sales error:", err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 
 app.get("/api/top-salespersons", async (req, res) => {
-  try {
-    const pool = await sql.connect(config);
-    const request = pool.request();
+  const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
 
-    const { fromDate, toDate, branch_code, division_code, supplier } = req.query;
-
-    if (fromDate) request.input("fromDate", sql.Date, fromDate);
-    if (toDate) request.input("toDate", sql.Date, toDate);
-    if (branch_code) request.input("branch_code", sql.VarChar, branch_code);
-    if (division_code) request.input("division_code", sql.VarChar, division_code);
-    if (supplier) request.input("supplier", sql.VarChar, supplier);
-
+ let filters = "WHERE SALESPERSON IS NOT NULL AND SALESPERSON <> '' ";
+  if (supplier) filters += " AND SUPPLIER = @supplier";
+  if (brand_code) filters += " AND BRAND_CODE = @brand_code";
+  if (division_code) filters += " AND DIVISION_CODE = @division_code";
+  if (type_code) filters += " AND TYPE_CODE = @type_code";
+  if (fromDate) filters += " AND VOCDATE >= @fromDate";
+  if (toDate) filters += " AND VOCDATE <= @toDate";
     const query = `
       SELECT TOP 6 
         SALESPERSON AS salesperson, 
         SUM(SALES) AS total_sales
       FROM MIS_DASHBOARD_TBL
-      WHERE 
-        SALESPERSON IS NOT NULL AND SALESPERSON <> '' AND
-        (@fromDate IS NULL OR VOCDATE >= @fromDate) AND
-        (@toDate IS NULL OR VOCDATE <= @toDate) AND
-        (@branch_code IS NULL OR BRANCH_CODE = @branch_code) AND
-        (@division_code IS NULL OR DIVISION_CODE = @division_code) AND
-        (@supplier IS NULL OR SUPPLIER = @supplier)
+      ${filters}
       GROUP BY SALESPERSON
       ORDER BY total_sales DESC
     `;
 
+    try {
+    const request = pool.request();
+
+    if (supplier) request.input("supplier", sql.VarChar, supplier);
+    if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
+    if (division_code) request.input("division_code", sql.VarChar, division_code);
+    if (type_code) request.input("type_code", sql.VarChar, type_code);
+    if (fromDate) request.input("fromDate", sql.Date, fromDate);
+    if (toDate) request.input("toDate", sql.Date, toDate);
+
     const result = await request.query(query);
-    res.json(result.recordset);
+    res.json({ data: result.recordset });
   } catch (err) {
-    console.error("❌ Top Salespersons error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("❌ salespersoN error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
      app.listen(PORT, () => {
