@@ -174,7 +174,7 @@ app.get("/api/customer-trend", async (req, res) => {
       WITH FirstPurchase AS (
         SELECT 
           CUSTOMER, 
-          MIN(VOCDATE) AS FirstPurchaseDate
+          MIN(FORMAT(VOCDATE, 'yyyy-MM')) AS FirstPurchaseMonth
         FROM MIS_DASHBOARD_TBL
         WHERE CUSTOMER IS NOT NULL
         ${fromDate ? "AND VOCDATE >= @fromDate" : ""}
@@ -183,10 +183,12 @@ app.get("/api/customer-trend", async (req, res) => {
       )
       SELECT 
         FORMAT(m.VOCDATE, 'yyyy-MM') AS Month,
-        COUNT(DISTINCT CASE WHEN m.VOCDATE = f.FirstPurchaseDate THEN m.CUSTOMER END) AS NewCustomers,
-        COUNT(DISTINCT CASE WHEN m.VOCDATE > f.FirstPurchaseDate THEN m.CUSTOMER END) AS ReturningCustomers
+        COUNT(DISTINCT m.CUSTOMER) AS TotalCustomers,
+        COUNT(DISTINCT CASE 
+          WHEN FORMAT(m.VOCDATE, 'yyyy-MM') = fp.FirstPurchaseMonth THEN m.CUSTOMER 
+        END) AS NewCustomers
       FROM MIS_DASHBOARD_TBL m
-      INNER JOIN FirstPurchase f ON m.CUSTOMER = f.CUSTOMER
+      JOIN FirstPurchase fp ON m.CUSTOMER = fp.CUSTOMER
       WHERE m.CUSTOMER IS NOT NULL
         ${fromDate ? "AND m.VOCDATE >= @fromDate" : ""}
         ${toDate ? "AND m.VOCDATE <= @toDate" : ""}
@@ -201,7 +203,6 @@ app.get("/api/customer-trend", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 
 app.get("/api/qty-sold", async (req, res) => {
