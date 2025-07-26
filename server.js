@@ -462,27 +462,29 @@ try {
       
 
   app.get('/api/supplier-sales', async (req, res) => {
+  try {
     const { supplier, brand_code, division_code, type_code, fromDate, toDate } = req.query;
-    
-    let filters = "WHERE supplier IS NOT NULL AND supplier != '' ";
-  if (supplier) filters += " AND SUPPLIER = @supplier";
-  if (brand_code) filters += " AND BRAND_CODE = @brand_code";
-  if (division_code) filters += " AND DIVISION_CODE = @division_code";
-  if (type_code) filters += " AND TYPE_CODE = @type_code";
-  if (fromDate) filters += " AND VOCDATE >= @fromDate";
-  if (toDate) filters += " AND VOCDATE <= @toDate";
 
-  const query = `
-      SELECT TOP 6 supplier, SUM(SALES) AS total_sales
+    // ✅ Always start with a base filter
+    let filters = "WHERE SUPPLIER IS NOT NULL AND SUPPLIER != ''";
+    if (supplier) filters += " AND SUPPLIER = @supplier";
+    if (brand_code) filters += " AND BRAND_CODE = @brand_code";
+    if (division_code) filters += " AND DIVISION_CODE = @division_code";
+    if (type_code) filters += " AND TYPE_CODE = @type_code";
+    if (fromDate) filters += " AND VOCDATE >= @fromDate";
+    if (toDate) filters += " AND VOCDATE <= @toDate";
+
+    const query = `
+      SELECT TOP 6 
+        SUPPLIER, 
+        SUM(SALES) AS total_sales
       FROM MIS_DASHBOARD_TBL
       ${filters}
-      GROUP BY supplier
+      GROUP BY SUPPLIER
       ORDER BY total_sales DESC;
     `;
 
-    try {
     const request = pool.request();
-
     if (supplier) request.input("supplier", sql.VarChar, supplier);
     if (brand_code) request.input("brand_code", sql.VarChar, brand_code);
     if (division_code) request.input("division_code", sql.VarChar, division_code);
@@ -490,14 +492,16 @@ try {
     if (fromDate) request.input("fromDate", sql.Date, fromDate);
     if (toDate) request.input("toDate", sql.Date, toDate);
 
+    console.log("✅ Running Query:", query, req.query); // ✅ Debugging
+
     const result = await request.query(query);
     res.json({ data: result.recordset });
+
   } catch (err) {
-    console.error("Error fetching top brands", err);
+    console.error("❌ Supplier Sales Error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 app.get('/api/branch-sales', async (req, res) => {
 
