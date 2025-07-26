@@ -72,21 +72,23 @@ function getDateGrouping(filter) {
 
     const query = `
       SELECT 
-        FORMAT(VOCDATE, 'MMMM') AS month,
+        DATENAME(MONTH, VOCDATE) AS month,       -- ✅ Better than FORMAT for grouping
         MONTH(VOCDATE) AS month_order,
         SUM(SALES) AS rawSales,
         SUM(COGS) AS rawCost
       FROM MIS_DASHBOARD_TBL
-      WHERE VOCDATE IS NOT NULL
+      WHERE 1=1                                   -- ✅ Always start with 1=1
         ${supplier ? "AND SUPPLIER = @supplier" : ""}
         ${brand_code ? "AND BRAND_CODE = @brand_code" : ""}
         ${division_code ? "AND DIVISION_CODE = @division_code" : ""}
         ${type_code ? "AND TYPE_CODE = @type_code" : ""}
         ${fromDate ? "AND VOCDATE >= @fromDate" : ""}
         ${toDate ? "AND VOCDATE <= @toDate" : ""}
-      GROUP BY FORMAT(VOCDATE, 'MMMM'), MONTH(VOCDATE)
+      GROUP BY DATENAME(MONTH, VOCDATE), MONTH(VOCDATE)
       ORDER BY MONTH(VOCDATE);
     `;
+
+    console.log("✅ Query Executed:", query, req.query); // Debugging log
 
     const rawResult = await request.query(query);
 
@@ -117,6 +119,7 @@ function getDateGrouping(filter) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 app.get("/api/avg-selling-price", async (req, res) => {
