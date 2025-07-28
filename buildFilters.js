@@ -1,8 +1,8 @@
-// utils/buildFilters.js
+
 import sql from "mssql";
 
-export function buildFilters(queryParams, request) {
-  const conditions = ["1=1"]; // always true to simplify appending ANDs
+export default function buildFilters(queryParams, request) {
+  const conditions = ["1=1"]; 
 
   if (queryParams.supplier) {
     conditions.push("SUPPLIER = @supplier");

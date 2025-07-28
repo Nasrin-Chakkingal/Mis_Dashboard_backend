@@ -4,7 +4,8 @@ dotenv.config();
 import express from 'express';
 import sql from 'mssql';
 import cors from 'cors';
-import { buildFilters } from '.utils/buildFilters.js';
+import buildFilters from './buildFilters';
+
 
 
 const app = express();
