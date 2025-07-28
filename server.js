@@ -221,14 +221,14 @@ app.get("/api/qty-sold", async (req, res) => {
   if (toDate) filters += " AND VOCDATE <= @toDate";
 
   const query = `
-    SELECT 
-      FORMAT(VOCDATE, 'MMMM') AS month,
-      MONTH(VOCDATE) AS month_order,
-      SUM(PIECES) AS qty_sold
-    FROM MIS_DASHBOARD_TBL
-    ${filters}
-    GROUP BY FORMAT(VOCDATE, 'MMMM'), MONTH(VOCDATE)
-    ORDER BY MONTH(VOCDATE);
+   SELECT 
+  DATENAME(MONTH, VOCDATE) AS month,
+  MONTH(VOCDATE) AS month_order,
+  SUM(PIECES) AS qty_sold
+FROM MIS_DASHBOARD_TBL
+${filters}
+GROUP BY DATENAME(MONTH, VOCDATE), MONTH(VOCDATE)
+ORDER BY MONTH(VOCDATE);
   `;
 
   try {
