@@ -72,12 +72,12 @@ function getDateGrouping(filter) {
 
     const query = `
       SELECT 
-        DATENAME(MONTH, VOCDATE) AS month,       -- ✅ Better than FORMAT for grouping
+        DATENAME(MONTH, VOCDATE) AS month,       
         MONTH(VOCDATE) AS month_order,
         SUM(SALES) AS rawSales,
         SUM(COGS) AS rawCost
       FROM MIS_DASHBOARD_TBL
-      WHERE 1=1                                   -- ✅ Always start with 1=1
+      WHERE 1=1                                   
         ${supplier ? "AND SUPPLIER = @supplier" : ""}
         ${brand_code ? "AND BRAND_CODE = @brand_code" : ""}
         ${division_code ? "AND DIVISION_CODE = @division_code" : ""}
@@ -174,35 +174,37 @@ app.get("/api/customer-trend", async (req, res) => {
     if (toDate) request.input("toDate", sql.Date, toDate);
 
     const query = `
-      WITH FirstPurchase AS (
-        SELECT 
-          CUSTOMER, 
-          MIN(FORMAT(VOCDATE, 'yyyy-MM')) AS FirstPurchaseMonth
-        FROM MIS_DASHBOARD_TBL
-       WHERE CUSTOMER IS NOT NULL AND VOCDATE IS NOT NULL
+       WITH FirstPurchase AS (
+  SELECT 
+    CUSTOMER, 
+    MIN(CONCAT(YEAR(VOCDATE), '-', RIGHT('0' + CAST(MONTH(VOCDATE) AS VARCHAR), 2))) AS FirstPurchaseMonth
+  FROM MIS_DASHBOARD_TBL
+  WHERE CUSTOMER IS NOT NULL AND VOCDATE IS NOT NULL
         ${fromDate ? "AND VOCDATE >= @fromDate" : ""}
         ${toDate ? "AND VOCDATE <= @toDate" : ""}
         GROUP BY CUSTOMER
       )
       SELECT 
-        FORMAT(m.VOCDATE, 'yyyy-MM') AS Month,
-        COUNT(DISTINCT m.CUSTOMER) AS TotalCustomers,
-        COUNT(DISTINCT CASE 
-          WHEN FORMAT(m.VOCDATE, 'yyyy-MM') = fp.FirstPurchaseMonth THEN m.CUSTOMER 
-        END) AS NewCustomers
-      FROM MIS_DASHBOARD_TBL m
-      JOIN FirstPurchase fp ON m.CUSTOMER = fp.CUSTOMER
-      WHERE m.CUSTOMER IS NOT NULL
+  CONCAT(YEAR(m.VOCDATE), '-', RIGHT('0' + CAST(MONTH(m.VOCDATE) AS VARCHAR), 2)) AS Month,
+  COUNT(DISTINCT m.CUSTOMER) AS TotalCustomers,
+  COUNT(DISTINCT CASE 
+    WHEN CONCAT(YEAR(m.VOCDATE), '-', RIGHT('0' + CAST(MONTH(m.VOCDATE) AS VARCHAR), 2)) = fp.FirstPurchaseMonth 
+    THEN m.CUSTOMER 
+  END) AS NewCustomers
+FROM MIS_DASHBOARD_TBL m
+JOIN FirstPurchase fp ON m.CUSTOMER = fp.CUSTOMER
+WHERE m.CUSTOMER IS NOT NULL AND m.VOCDATE IS NOT NULL
         ${fromDate ? "AND m.VOCDATE >= @fromDate" : ""}
         ${toDate ? "AND m.VOCDATE <= @toDate" : ""}
-      GROUP BY FORMAT(m.VOCDATE, 'yyyy-MM')
-      ORDER BY Month;
+      GROUP BY CONCAT(YEAR(m.VOCDATE), '-', RIGHT('0' + CAST(MONTH(m.VOCDATE) AS VARCHAR), 2))
+ORDER BY Month;
+
     `;
 
     const result = await request.query(query);
     res.json({ data: result.recordset });
   } catch (err) {
-    cconsole.error("❌ Customer trend error:", err.message, err.stack);
+    console.error("❌ Customer trend error:", err.message, err.stack);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
