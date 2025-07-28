@@ -6,6 +6,7 @@ import sql from 'mssql';
 import cors from 'cors';
 import { buildFilters } from './buildFilters';
 
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -36,7 +37,7 @@ sql.connect(config)
 
 
 
-    app.get('/api/monthly-sales', async (req, res) => {
+  app.get('/api/monthly-sales', async (req, res) => {
   try {
     const request = pool.request();
     const filters = buildFilters(req.query, request);
