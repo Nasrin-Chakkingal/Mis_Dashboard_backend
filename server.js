@@ -179,7 +179,7 @@ app.get("/api/customer-trend", async (req, res) => {
           CUSTOMER, 
           MIN(FORMAT(VOCDATE, 'yyyy-MM')) AS FirstPurchaseMonth
         FROM MIS_DASHBOARD_TBL
-        WHERE CUSTOMER IS NOT NULL
+       WHERE CUSTOMER IS NOT NULL AND VOCDATE IS NOT NULL
         ${fromDate ? "AND VOCDATE >= @fromDate" : ""}
         ${toDate ? "AND VOCDATE <= @toDate" : ""}
         GROUP BY CUSTOMER
@@ -202,7 +202,7 @@ app.get("/api/customer-trend", async (req, res) => {
     const result = await request.query(query);
     res.json({ data: result.recordset });
   } catch (err) {
-    console.error("❌ Customer trend error:", err);
+    cconsole.error("❌ Customer trend error:", err.message, err.stack);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
