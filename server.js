@@ -497,7 +497,7 @@ app.get('/api/customer-profit', async (req, res) => {
 });
 
 
-app.get('/api/customer-profit', async (req, res) => {
+app.get('/api/customer-qnty', async (req, res) => {
 
     try {
     const request = pool.request();
