@@ -452,6 +452,72 @@ app.get("/api/top-salespersons", async (req, res) => {
   }
 });
 
+app.get('/api/customer-sales', async (req, res) => {
+
+    try {
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT TOP 7 CUSTOMER,  SUM(SALES) / COUNT(*) AS AvgSales
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALES > 0 AND (${filters})
+      GROUP BY CUSTOMER
+      ORDER BY AvgSales DESC
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Customer-wise sales error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get('/api/customer-profit', async (req, res) => {
+
+    try {
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT TOP 7 CUSTOMER,  SUM(SALES - COGS) / COUNT(*) AS AvgProfit
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALES > 0 AND (${filters})
+      GROUP BY CUSTOMER
+      ORDER BY AvgProfit DESC
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Customer-wise profit error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+app.get('/api/customer-profit', async (req, res) => {
+
+    try {
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT TOP 7 CUSTOMER,  SUM(PIECES) AS totalQty
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALES > 0 AND (${filters})
+      GROUP BY CUSTOMER
+      ORDER BY totalQty DESC
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Customer-wise qnty error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 
      app.listen(PORT, () => {
