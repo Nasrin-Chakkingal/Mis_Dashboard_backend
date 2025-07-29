@@ -5,11 +5,8 @@ import express from 'express';
 import sql from 'mssql';
 import cors from 'cors';
 
-
-
 const app = express();
 const PORT = process.env.PORT || 3001;
-
 app.use(cors());
 app.use(express.json());
 
@@ -66,8 +63,6 @@ sql.connect(config)
       return conditions.join(" AND ");
     }
     
-
-
   app.get('/api/monthly-sales', async (req, res) => {
   try {
     const request = pool.request();
@@ -459,11 +454,23 @@ app.get('/api/customer-sales', async (req, res) => {
     const filters = buildFilters(req.query, request);
 
     const query = `
-      SELECT TOP 7 CUSTOMER,  SUM(SALES) / COUNT(*) AS AvgSales
-      FROM MIS_DASHBOARD_TBL
-      WHERE SALES > 0 AND (${filters})
-      GROUP BY CUSTOMER
-      ORDER BY AvgSales DESC
+    SELECT
+  YEAR(VOCDATE) AS [Year],
+  MONTH(VOCDATE) AS [Month],
+  SUM(SALES) AS TotalSales,
+  SUM(COGS) AS TotalCOGS,
+  COUNT(DISTINCT CUSTOMER) AS CustomerCount,
+  CAST(1.0 * SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgSalesPerCustomer,
+  CAST(1.0 * (SUM(SALES) - SUM(COGS)) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgProfitPerCustomer
+FROM
+  MIS_DASHBOARD_TBL
+WHERE
+  SALES > 0 AND (${filters})
+GROUP BY
+  YEAR(VOCDATE), MONTH(VOCDATE)
+ORDER BY
+  YEAR(VOCDATE), MONTH(VOCDATE);
+      
     `;
 
     const result = await request.query(query);
@@ -474,27 +481,6 @@ app.get('/api/customer-sales', async (req, res) => {
   }
 });
 
-app.get('/api/customer-profit', async (req, res) => {
-
-    try {
-    const request = pool.request();
-    const filters = buildFilters(req.query, request);
-
-    const query = `
-      SELECT TOP 7 CUSTOMER,  SUM(SALES - COGS) / COUNT(*) AS AvgProfit
-      FROM MIS_DASHBOARD_TBL
-      WHERE SALES > 0 AND (${filters})
-      GROUP BY CUSTOMER
-      ORDER BY AvgProfit DESC
-    `;
-
-    const result = await request.query(query);
-    res.json({ data: result.recordset });
-  } catch (err) {
-    console.error("❌ Customer-wise profit error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
 
 
 app.get('/api/customer-qnty', async (req, res) => {
@@ -504,11 +490,20 @@ app.get('/api/customer-qnty', async (req, res) => {
     const filters = buildFilters(req.query, request);
 
     const query = `
-      SELECT TOP 7 CUSTOMER,  SUM(PIECES) AS totalQty
-      FROM MIS_DASHBOARD_TBL
-      WHERE SALES > 0 AND (${filters})
-      GROUP BY CUSTOMER
-      ORDER BY totalQty DESC
+      SELECT
+  YEAR(VOCDATE) AS [Year],
+  MONTH(VOCDATE) AS [Month],
+  SUM(PIECES) AS TotalQty,
+  COUNT(DISTINCT CUSTOMER) AS CustomerCount,
+  CAST(1.0 * SUM(PIECES) / COUNT(DISTINCT CUSTOMER) AS DECIMAL(10, 2)) AS AvgQtyPerCustomer
+FROM
+  MIS_DASHBOARD_TBL
+WHERE
+  SALES > 0 AND (${filters})
+GROUP BY
+  YEAR(VOCDATE), MONTH(VOCDATE)
+ORDER BY
+  YEAR(VOCDATE), MONTH(VOCDATE);
     `;
 
     const result = await request.query(query);
