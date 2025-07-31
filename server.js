@@ -455,13 +455,13 @@ app.get('/api/customer-sales', async (req, res) => {
 
     const query = `
     SELECT
-  YEAR(VOCDATE) AS [Year],
-  MONTH(VOCDATE) AS [Month],
-  SUM(SALES) AS TotalSales,
-  SUM(COGS) AS TotalCOGS,
-  COUNT(DISTINCT CUSTOMER) AS CustomerCount,
-  CAST(1.0 * SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgSalesPerCustomer,
-  CAST(1.0 * (SUM(SALES) - SUM(COGS)) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgProfitPerCustomer
+     YEAR(VOCDATE) AS [Year],
+     MONTH(VOCDATE) AS [Month],
+     SUM(SALES) AS TotalSales,
+     SUM(COGS) AS TotalCOGS,
+     COUNT(DISTINCT CUSTOMER) AS CustomerCount,
+    CAST(1.0 * SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgSalesPerCustomer,
+    CAST(1.0 * (SUM(SALES) - SUM(COGS)) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgProfitPerCustomer
 FROM
   MIS_DASHBOARD_TBL
 WHERE
@@ -514,6 +514,23 @@ ORDER BY
   }
 });
 
+// ✅ Route: Avg per Customer Summary
+app.get('/api/customer-summary', async (req, res) => {
+  try {
+    const request = pool.request();
+
+    const result = await request.query(`
+      SELECT COUNT(DISTINCT CUSTOMER) AS TotalCustomers
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALES > 0
+    `);
+
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error("❌ Customer summary error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
      app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
