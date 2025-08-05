@@ -540,15 +540,15 @@ app.get("/api/inventory/monthly-summary", async (req, res) => {
 
     const query =`
       SELECT
-        FORMAT(PURDATE, 'yyyy-MM') AS Month,
-        SUM(MKG_STOCKVALUE) AS TotalStockValue,
-        SUM(PIECES) AS TotalQuantity,
-        SUM([GROSS WEIGHT]) AS TotalGrossWeight,
-        SUM([PURE WEIGHT]) AS TotalPureWeight
-      FROM InventoryTable
-      Where (${filters}) AND YEAR(PURDATE) = 2022
-      GROUP BY FORMAT(PURDATE, 'yyyy-MM')
-      ORDER BY Month
+    FORMAT(PURDATE, 'yyyy-MM') AS Month,
+    SUM(MKG_STOCKVALUE) AS TotalStockValue,
+    SUM(PIECES) AS TotalQuantity,
+    SUM([GROSS WEIGHT]) AS TotalGrossWeight,
+    SUM([PURE WEIGHT]) AS TotalPureWeight
+FROM MIS_DASHBOARD_TBL
+Where YEAR(PURDATE) = 2022 AND (${filters})
+GROUP BY FORMAT(PURDATE, 'yyyy-MM')
+ORDER BY Month;
     `;
 
     const result = await pool.request().query(query);
