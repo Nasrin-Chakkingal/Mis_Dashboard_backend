@@ -532,6 +532,34 @@ app.get('/api/customer-summary', async (req, res) => {
   }
 });
 
+// 🚩 INVENTORY MONTHLY SUMMARY API
+app.get("/api/inventory/monthly-summary", async (req, res) => {
+  try {
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query =`
+      SELECT
+        FORMAT(PURDATE, 'yyyy-MM') AS Month,
+        SUM(MKG_STOCKVALUE) AS TotalStockValue,
+        SUM(PIECES) AS TotalQuantity,
+        SUM([GROSS WEIGHT]) AS TotalGrossWeight,
+        SUM([PURE WEIGHT]) AS TotalPureWeight
+      FROM InventoryTable
+      Where (${filters}) AND YEAR(PURDATE) = 2022
+      GROUP BY FORMAT(PURDATE, 'yyyy-MM')
+      ORDER BY Month
+    `;
+
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching inventory summary:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
      app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
