@@ -541,7 +541,7 @@ app.get("/api/inventory/monthly-summary", async (req, res) => {
     const query =`
       SELECT
     FORMAT(PURDATE, 'yyyy-MM') AS Month,
-    SUM(MKG_STOCKVALUE) AS TotalStockValue,
+    SUM(COGS) AS TotalStockValue,
     SUM(PIECES) AS TotalQuantity,
     SUM([GROSS WEIGHT]) AS TotalGrossWeight,
     SUM([PURE WEIGHT]) AS TotalPureWeight
