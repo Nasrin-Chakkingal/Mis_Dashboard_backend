@@ -30,7 +30,19 @@ const config = {
 
 sql.connect(config)
   .then(pool => {
-    console.log("✅ Connected to SQL Server");
+    if (pool.connected) {
+      console.log("✅ Connected to SQL Server");
+
+      // Example test route
+      app.get("/api/test", async (req, res) => {
+        try {
+          const result = await pool.request().query("SELECT GETDATE() as CurrentTime");
+          res.json(result.recordset);
+        } catch (err) {
+          console.error("❌ Query error:", err);
+          res.status(500).json({ error: "Database query failed" });
+        }
+      });
 
     function buildFilters(queryParams, request) {
       const conditions = ["1=1"]; 
@@ -560,11 +572,37 @@ ORDER BY YEAR(PURDATE), MONTH(PURDATE);
   }
 });
 
+app.get('/api/supplier', async (req, res) => {
+  try {
+    const request = pool.request();
 
-     app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-  });
+    const result = await request.query(`
+      SELECT TOP 10
+        SUPPLIER,
+        SUM(SALES) AS totalSales,
+        SUM(SALES - COGS) AS totalProfit
+      FROM MIS_DASHBOARD_TBL
+      WHERE SUPPLIER IS NOT NULL
+        AND LTRIM(RTRIM(SUPPLIER)) <> ''
+      GROUP BY SUPPLIER
+      ORDER BY totalSales DESC
+    `);
 
-}).catch((err) => {
-  console.error("❌ SQL Connection Error:", err);
+    res.json(result.recordset); // return all top 10 suppliers
+  } catch (err) {
+    console.error("❌ supplier :", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
+
+
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+      });
+    }
+  })
+  .catch(err => {
+    console.error("❌ Database connection failed:", err);
+    process.exit(1); // stop app if DB fails
+  });
