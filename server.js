@@ -595,6 +595,26 @@ app.get('/api/supplier', async (req, res) => {
   }
 });
 
+app.get('/api/capital-report', async (req, res) => {
+  try {
+    const request = pool.request();
+
+    const query = `
+      SELECT 
+        FORMAT(VOCDATE, 'yyyy-MM') AS month,
+        SUM(MKG_STOCKVALUE) AS totalStockValue
+      FROM MIS_DASHBOARD_TBL
+      GROUP BY FORMAT(VOCDATE, 'yyyy-MM')
+      ORDER BY month DESC;
+    `;
+
+    const result = await request.query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("❌ Capital Report Error:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
     app.listen(PORT, () => {
