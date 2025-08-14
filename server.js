@@ -577,7 +577,7 @@ app.get('/api/supplier', async (req, res) => {
     const request = pool.request();
 
     const result = await request.query(`
-      SELECT TOP 10
+      SELECT TOP 6
         SUPPLIER,
         SUM(SALES) AS totalSales,
         SUM(SALES - COGS) AS totalProfit
