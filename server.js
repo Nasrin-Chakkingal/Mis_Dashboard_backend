@@ -63,6 +63,11 @@ sql.connect(config)
         conditions.push("TYPE_CODE = @type_code");
         request.input("type_code", sql.VarChar, queryParams.type_code);
       }
+
+      if (queryParams.branch) {
+    conditions.push("branch_code = @branch_code");   // use your actual column name
+    request.input("branch_code", sql.VarChar, queryParams.branch);
+  }
       if (queryParams.fromDate) {
         conditions.push("VOCDATE >= @fromDate");
         request.input("fromDate", sql.Date, queryParams.fromDate);
@@ -320,7 +325,7 @@ app.get("/api/filter-options", async (req, res) => {
     const poolRequest = pool.request();
 
     const result = await poolRequest.query(`
-      SELECT DISTINCT SUPPLIER, BRAND_CODE, DIVISION_CODE, TYPE_CODE
+      SELECT DISTINCT SUPPLIER, BRAND_CODE, DIVISION_CODE, TYPE_CODE, BRANCH_CODE
       FROM MIS_DASHBOARD_TBL
       WHERE SUPPLIER IS NOT NULL OR BRAND_CODE IS NOT NULL
          OR DIVISION_CODE IS NOT NULL OR TYPE_CODE IS NOT NULL
@@ -334,6 +339,7 @@ app.get("/api/filter-options", async (req, res) => {
       brand_code: [...new Set(raw.map(r => r.BRAND_CODE))].filter(Boolean),
       division_code: [...new Set(raw.map(r => r.DIVISION_CODE))].filter(Boolean),
       type_code: [...new Set(raw.map(r => r.TYPE_CODE))].filter(Boolean),
+      branch_code: [...new Set(raw.map(r => r.BRANCH_CODE))].filter(Boolean),
     };
 
     res.json(unique);
@@ -583,7 +589,7 @@ app.get('/api/supplier', async (req, res) => {
         SUM(SALES - COGS) AS totalProfit
       FROM MIS_DASHBOARD_TBL
       WHERE SUPPLIER IS NOT NULL
-        AND LTRIM(RTRIM(SUPPLIER)) <> ''
+        AND LTRIM(RTRIM(SUPPLIER)) <> '' AND (${filters})
       GROUP BY SUPPLIER
       ORDER BY totalSales DESC
     `);
@@ -604,6 +610,7 @@ app.get('/api/capital-report', async (req, res) => {
         FORMAT(VOCDATE, 'yyyy-MM') AS month,
         SUM(MKG_STOCKVALUE) AS totalStockValue
       FROM MIS_DASHBOARD_TBL
+      wHERE  (${filters})
       GROUP BY FORMAT(VOCDATE, 'yyyy-MM')
       ORDER BY month DESC;
     `;
