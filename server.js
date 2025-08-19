@@ -579,10 +579,11 @@ ORDER BY YEAR(PURDATE), MONTH(PURDATE);
 });
 
 app.get('/api/supplier', async (req, res) => {
-  try {
+   try {
     const request = pool.request();
+    const filters = buildFilters(req.query, request);
 
-    const result = await request.query(`
+    const query = `
       SELECT TOP 6
         SUPPLIER,
         SUM(SALES) AS totalSales,
@@ -592,11 +593,12 @@ app.get('/api/supplier', async (req, res) => {
         AND LTRIM(RTRIM(SUPPLIER)) <> '' AND (${filters})
       GROUP BY SUPPLIER
       ORDER BY totalSales DESC
-    `);
+    `;
 
-    res.json(result.recordset); // return all top 10 suppliers
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
   } catch (err) {
-    console.error("❌ supplier :", err);
+    console.error("❌ Supplier sales error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -604,6 +606,7 @@ app.get('/api/supplier', async (req, res) => {
 app.get('/api/capital-report', async (req, res) => {
   try {
     const request = pool.request();
+    const filters = buildFilters(req.query, request);
 
     const query = `
       SELECT 
@@ -616,10 +619,10 @@ app.get('/api/capital-report', async (req, res) => {
     `;
 
     const result = await request.query(query);
-    res.json(result.recordset);
+    res.json({ data: result.recordset });
   } catch (err) {
-    console.error("❌ Capital Report Error:", err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("❌ Customer-wise sales error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
