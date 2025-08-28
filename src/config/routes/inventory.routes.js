@@ -5,7 +5,7 @@ import { getMonthlySummaryController,
   getStockReportController,
   getDeadStockController,
   getInventorySummaryCardsController,
- } from '../controllers/inventory.controller.js';
+ } from '../src/controllers/inventory.controller.js';
 
 const router = express.Router();
 
