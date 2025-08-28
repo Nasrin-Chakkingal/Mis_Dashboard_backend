@@ -1,10 +1,11 @@
-import { buildFilters } from '../utils/filters.js';
-import { 
-  customerTrend,
+
+
+import { customerTrend,
   customerSales,
   customerQuantity,
   customerSummary
-} from '../services/customer.service.js';
+ } from '../services/customer.services.js';
+import { buildFilters } from '../utils/filters.js';
 
 export const getCustomerTrendController = async (req, res) => {
   try {

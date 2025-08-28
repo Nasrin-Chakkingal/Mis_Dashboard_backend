@@ -1,7 +1,8 @@
 // src/services/sales.service.js
 import { poolPromise } from '../config/db.js';
-import { bindParams } from '../utils/filters.js';
+
 import sql from 'mssql'; // Needed for input()
+import { bindParams } from '../utils/filters.js';
 
 // 📊 Monthly Sales
 export const monthlySales = async (whereClause, params) => {

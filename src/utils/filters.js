@@ -1,5 +1,5 @@
 // src/utils/filters.js
-import { sql } from '../src/config/db.js';
+import { sql } from '../config/db.js';
 
 export const buildFilters = (query) => {
   const parts = ['1=1'];

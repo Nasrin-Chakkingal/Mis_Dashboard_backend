@@ -1,11 +1,13 @@
-import { buildFilters } from '../utils/filters.js';
+
+
 import { monthlySummary,
   scrap_Analysis,
   Inventory_Movement,
   Stock_Report,
   Dead_Stock,
   Inventory_SummaryCards,
-} from '../services/inventory.service.js';
+ } from '../services/inventory.services.js';
+import { buildFilters } from '../utils/filters.js';
 
 
 export const getMonthlySummaryController = async (req, res) => {

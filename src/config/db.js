@@ -1,5 +1,9 @@
-// src/config/db.js
-import sql from 'mssql';
+import sql from "mssql";
+import dotenv from "dotenv";
+
+dotenv.config(); // ✅ make sure env is loaded here too
+
+
 
 const config = {
   user: process.env.DB_USER,
@@ -11,19 +15,17 @@ const config = {
     encrypt: true,
     trustServerCertificate: true,
   },
-  requestTimeout: 240000,
-  pool: { max: 10, min: 0, idleTimeoutMillis: 120000 },
 };
 
-export const poolPromise = new sql.ConnectionPool(config)
+const poolPromise = new sql.ConnectionPool(config)
   .connect()
   .then(pool => {
-    console.log('✅ Connected to SQL Server');
+    console.log("✅ Connected to SQL Server");
     return pool;
   })
   .catch(err => {
-    console.error('❌ Database connection failed:', err);
-    process.exit(1);
+    console.error("❌ Database connection failed:", err);
+    throw err;
   });
 
-export { sql };
+export { sql, poolPromise };

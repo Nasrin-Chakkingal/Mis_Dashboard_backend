@@ -4,12 +4,11 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-
-
 import routes from "./src/routes/index.routes.js";
+import notFound from "./src/middleware/notfound.js";
 
-import notFound from "./src/middleware/notFound.js";
-import errorHandler from "./src/middleware/errorHandler.js";
+
+
 import "./src/config/db.js"; // initializes pool
 
 const app = express();
@@ -24,9 +23,8 @@ app.get("/healthz", (_, res) => res.send("ok"));
 // ✅ Mount all routes under /api
 app.use("/api", routes);
 
-// Middleware
-app.use(notFound);     // 404 handler
-app.use(errorHandler); // error handler
+app.use(notFound);
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
