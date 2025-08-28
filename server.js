@@ -4,7 +4,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-import routes from "./src/routes/index.js";   // centralized routes
+import routes from "./routes/index.js";   // centralized routes
 import notFound from "./src/middleware/notFound.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 import "./src/config/db.js"; // initializes pool
