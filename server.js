@@ -7,6 +7,7 @@ import cors from "cors";
 
 
 import routes from "./src/routes/index.routes.js";
+
 import notFound from "./src/middleware/notFound.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 import "./src/config/db.js"; // initializes pool

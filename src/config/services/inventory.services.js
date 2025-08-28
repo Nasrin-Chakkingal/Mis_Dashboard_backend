@@ -1,5 +1,5 @@
-import { poolPromise } from '../src/config/db.js';
-import { bindParams } from '../controllers/utils/filters.js';
+import { poolPromise } from '../config/db.js';
+ import { bindParams } from '../utils/filters.js';
 
 // 🚩 INVENTORY MONTHLY SUMMARY
 export const monthlySummary = async (whereClause, params) => {
