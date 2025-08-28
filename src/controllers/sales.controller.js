@@ -1,4 +1,4 @@
-import { buildFilters } from '../utils/filters.js';
+import { buildFilters } from '../../utils/filters.js';
 
 import { monthlySales,topBrands,
   Pieces,
@@ -11,7 +11,7 @@ import { monthlySales,topBrands,
   branchSales,
   movementCategoryCopmarison,
   qntySold,
-  Summary } from '../services/sales.services.js';
+  Summary } from '../sales.services.js';
 
 // 🔹 Monthly Sales
 export const getMonthlySales = async (req, res) => {

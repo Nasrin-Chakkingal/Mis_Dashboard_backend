@@ -6,7 +6,7 @@ import {
   getStockReportController,
   getDeadStockController,
   getInventorySummaryCardsController,
-} from '../controllers/inventory.controller.js';   // ✅ removed extra /src
+} from '../services/controllers/inventory.controller.js';   // ✅ removed extra /src
 
 const router = express.Router();
 

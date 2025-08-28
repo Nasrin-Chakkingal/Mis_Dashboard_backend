@@ -4,7 +4,7 @@ import {
   getCustomerSalesController,
   getCustomerQuantityController,
   getCustomerSummaryController
-} from '../controllers/customer.controller.js';
+} from '../services/controllers/customer.controller.js';
 
 const router = express.Router();
 

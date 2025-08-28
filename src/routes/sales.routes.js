@@ -13,7 +13,7 @@ import {
   getMovementCategoryComparison,
   getQntySold,
   getSummary
-} from '../controllers/sales.controller.js';
+} from '../services/controllers/sales.controller.js';
 
 const router = express.Router();
 

@@ -6,8 +6,8 @@ import { monthlySummary,
   Stock_Report,
   Dead_Stock,
   Inventory_SummaryCards,
- } from '../services/inventory.services.js';
-import { buildFilters } from '../utils/filters.js';
+ } from '../inventory.services.js';
+import { buildFilters } from '../../utils/filters.js';
 
 
 export const getMonthlySummaryController = async (req, res) => {
