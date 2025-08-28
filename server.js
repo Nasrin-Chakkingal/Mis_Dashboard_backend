@@ -6,7 +6,7 @@ import express from "express";
 import cors from "cors";
 
 // ✅ FIXED paths
-import routes from "./src/routes/index.js";
+import routes from "./src/routes/index.routes.js";
 import notFound from "./src/middleware/notFound.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 import "./src/config/db.js"; // initializes pool
