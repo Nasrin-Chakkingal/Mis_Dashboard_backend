@@ -112,3 +112,21 @@ export const Dead_Stock = async (whereClause, params) => {
   const { recordset } = await request.query(query);
   return recordset;
 };
+
+export const Inventory_SummaryCards = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = bindParams(pool.request(), params);
+
+  const query = `
+    SELECT
+      SUM(MKG_STOCKVALUE) AS TotalStockValue,
+      SUM(PIECES) AS TotalQuantity,
+      SUM([GROSS WEIGHT]) AS TotalGrossWeight,
+      SUM([PURE WEIGHT]) AS TotalPureWeight
+    FROM MIS_DASHBOARD_TBL
+    WHERE (${whereClause})
+  `;
+
+  const { recordset } = await request.query(query);
+  return recordset[0]; // return single summary row
+};

@@ -4,6 +4,7 @@ import { monthlySummary,
   Inventory_Movement,
   Stock_Report,
   Dead_Stock,
+  Inventory_SummaryCards,
 } from '../services/inventory.service.js';
 
 
@@ -58,6 +59,17 @@ export const getDeadStockController = async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Error fetching dead stock:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getInventorySummaryCardsController = async (req, res) => {
+  try {
+    const { whereClause, params } = buildFilters(req.query);
+    const data = await Inventory_SummaryCards(whereClause, params);
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching inventory summary cards:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

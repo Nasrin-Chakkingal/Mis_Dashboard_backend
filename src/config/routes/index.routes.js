@@ -1,11 +1,17 @@
-// src/routes/index.js
-import { Router } from 'express';
-import salesRoutes from './sales.routes.js';
+import { Router } from "express";
+import salesRoutes from "./sales.routes.js";
+
+ import inventoryRoutes from "./inventory.routes.js";
+ import customerRoutes from "./customer.routes.js";
 
 const router = Router();
 
-router.use('/api', salesRoutes);
+// group all routes under `/api`
+router.use("/api/sales", salesRoutes);
 
-// Later: router.use('/api/inventory', inventoryRoutes) etc.
+router.use("/api/customer", customerRoutes);
+router.use("/api/inventory", inventoryRoutes);
+
+
 
 export default router;
