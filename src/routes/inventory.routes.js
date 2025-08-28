@@ -1,12 +1,12 @@
 import express from 'express';
-import {
-  getMonthlySummaryController,
+
+import { getMonthlySummaryController,
   getScrapAnalysisController,
   getInventoryMovementController,
   getStockReportController,
   getDeadStockController,
   getInventorySummaryCardsController,
-} from '../services/controllers/inventory.controller.js';   // ✅ removed extra /src
+ } from '../controllers/inventory.controller.js';
 
 const router = express.Router();
 

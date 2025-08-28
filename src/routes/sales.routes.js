@@ -1,6 +1,6 @@
 import express from 'express';
-import {
-  getMonthlySales,
+
+import { getMonthlySales,
   getTopBrands,
   getPieces,
   getTopSalesPerson,
@@ -13,7 +13,7 @@ import {
   getMovementCategoryComparison,
   getQntySold,
   getSummary
-} from '../services/controllers/sales.controller.js';
+ } from '../controllers/sales.controller.js';
 
 const router = express.Router();
 

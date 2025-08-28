@@ -1,6 +1,8 @@
-import { buildFilters } from '../../utils/filters.js';
 
-import { monthlySales,topBrands,
+
+
+import { monthlySales,
+  topBrands,
   Pieces,
   topsalesPerson,
   supplierSales,
@@ -11,7 +13,9 @@ import { monthlySales,topBrands,
   branchSales,
   movementCategoryCopmarison,
   qntySold,
-  Summary } from '../sales.services.js';
+  Summary 
+ } from '../services/sales.services.js';
+import { buildFilters } from '../utils/filters.js';
 
 // 🔹 Monthly Sales
 export const getMonthlySales = async (req, res) => {

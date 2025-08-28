@@ -4,8 +4,8 @@ import { customerTrend,
   customerSales,
   customerQuantity,
   customerSummary
- } from '../customer.services.js';
-import { buildFilters } from '../../utils/filters.js';
+ } from '../services/customer.services.js';
+import { buildFilters } from '../utils/filters.js';
 
 export const getCustomerTrendController = async (req, res) => {
   try {
