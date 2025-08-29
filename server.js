@@ -9,7 +9,8 @@ import notFound from "./src/middleware/notfound.js";
 
 
 import "./src/config/db.js"; // initializes pool
-import errorHandler from "./src/middleware/errorHandler.js";
+import errorhandler from "./src/middleware/errorhandler.js";
+
 
 
 const app = express();
@@ -25,7 +26,7 @@ app.get("/healthz", (_, res) => res.send("ok"));
 app.use("/api", routes);
 
 app.use(notFound);
-app.use(errorHandler)
+app.use(errorhandler)
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
