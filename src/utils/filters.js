@@ -1,34 +1,40 @@
-// src/utils/filters.js
-import { sql } from '../config/db.js';
+import sql from "mssql";
 
-export const buildFilters = (query) => {
-  const parts = ['1=1'];
+export const buildFilters = (queryParams, request) => {
+  const conditions = ["1=1"]; // always true so AND works
   const params = {};
 
-  const add = (key, clause, type, value) => {
-    if (value !== undefined && value !== null && value !== '') {
-      parts.push(clause);
-      params[key] = { type, value };
-    }
-  };
-
-  add('supplier',        'SUPPLIER = @supplier',        sql.VarChar, query.supplier);
-  add('brand_code',      'BRAND_CODE = @brand_code',    sql.VarChar, query.brand_code);
-  add('division_code',   'DIVISION_CODE = @division_code', sql.VarChar, query.division_code);
-  add('type_code',       'TYPE_CODE = @type_code',      sql.VarChar, query.type_code);
-  add('branch_code',     'BRANCH_CODE = @branch_code',  sql.VarChar, query.branch_code);
-  add('fromDate',        'VOCDATE >= @fromDate',        sql.Date,    query.fromDate);
-  add('toDate',          'VOCDATE <= @toDate',          sql.Date,    query.toDate);
+  if (queryParams.supplier) {
+    conditions.push("SUPPLIER = @supplier");
+    request.input("supplier", sql.VarChar, queryParams.supplier);
+  }
+  if (queryParams.brand_code) {
+    conditions.push("BRAND_CODE = @brand_code");
+    request.input("brand_code", sql.VarChar, queryParams.brand_code);
+  }
+  if (queryParams.division_code) {
+    conditions.push("DIVISION_CODE = @division_code");
+    request.input("division_code", sql.VarChar, queryParams.division_code);
+  }
+  if (queryParams.type_code) {
+    conditions.push("TYPE_CODE = @type_code");
+    request.input("type_code", sql.VarChar, queryParams.type_code);
+  }
+  if (queryParams.branch_code) {
+    conditions.push("BRANCH_CODE = @branch_code");
+    request.input("branch_code", sql.VarChar, queryParams.branch_code);
+  }
+  if (queryParams.fromDate) {
+    conditions.push("VOCDATE >= @fromDate");
+    request.input("fromDate", sql.Date, queryParams.fromDate);
+  }
+  if (queryParams.toDate) {
+    conditions.push("VOCDATE <= @toDate");
+    request.input("toDate", sql.Date, queryParams.toDate);
+  }
 
   return {
-    whereClause: parts.join(' AND '),
+    whereClause: conditions.join(" AND "),
     params,
   };
-};
-
-export const bindParams = (request, params) => {
-  Object.entries(params).forEach(([name, p]) => {
-    request.input(name, p.type, p.value);
-  });
-  return request;
 };
