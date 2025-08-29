@@ -1,5 +1,6 @@
 import express from "express";
-import { getFilters } from "../controllers/filters.controller.js";
+import { getFilters } from "../controllers/filters.controllers.js";
+
 
 const router = express.Router();
 
