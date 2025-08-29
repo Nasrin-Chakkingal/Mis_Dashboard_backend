@@ -1,10 +1,10 @@
 import { poolPromise } from '../config/db.js';
-import { bindParams } from '../utils/filters.js';
+import { buildFilters } from '../utils/filters.js';
  
 
 export const customerTrend = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `  WITH FirstPurchase AS (
   SELECT 
@@ -34,7 +34,7 @@ ORDER BY Month; `;
 
 export const customerSales = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
 
   const query = `    SELECT
@@ -63,7 +63,7 @@ ORDER BY
 
 export const customerQuantity = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 const query = `  
       SELECT
   YEAR(VOCDATE) AS [Year],
@@ -88,7 +88,7 @@ ORDER BY
 // ✅ Route: Avg per Customer Summary
 export const customerSummary = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 const query = `  
       SELECT COUNT(DISTINCT CUSTOMER) AS TotalCustomers
       FROM MIS_DASHBOARD_TBL

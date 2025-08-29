@@ -1,11 +1,11 @@
 import { poolPromise } from '../config/db.js';
-import { bindParams } from '../utils/filters.js';
+import { buildFilters } from '../utils/filters.js';
 
 
 // 🚩 INVENTORY MONTHLY SUMMARY
 export const monthlySummary = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `
     SELECT
@@ -28,7 +28,7 @@ export const monthlySummary = async (whereClause, params) => {
 // 🚩 SCRAP ANALYSIS
 export const scrap_Analysis = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `
     SELECT 
@@ -49,7 +49,7 @@ export const scrap_Analysis = async (whereClause, params) => {
 // 🚩 INVENTORY MOVEMENT
 export const Inventory_Movement = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `
     SELECT 
@@ -71,7 +71,7 @@ export const Inventory_Movement = async (whereClause, params) => {
 // 🚩 STOCK REPORT
 export const Stock_Report = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `
     SELECT 
@@ -96,7 +96,7 @@ export const Stock_Report = async (whereClause, params) => {
 // 🚩 DEAD STOCK
 export const Dead_Stock = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `
     SELECT 
@@ -116,7 +116,7 @@ export const Dead_Stock = async (whereClause, params) => {
 
 export const Inventory_SummaryCards = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `
     SELECT

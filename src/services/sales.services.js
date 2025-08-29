@@ -2,12 +2,12 @@
 import { poolPromise } from '../config/db.js';
 
 import sql from 'mssql'; // Needed for input()
-import { bindParams } from '../utils/filters.js';
+import { buildFilters } from '../utils/filters.js';
 
 // 📊 Monthly Sales
 export const monthlySales = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   const query = `
     SELECT 
@@ -44,7 +44,7 @@ export const monthlySales = async (whereClause, params) => {
 // 📊 Top Brands
 export const topBrands = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT TOP 6 BRAND_CODE AS brand, SUM(SALES) AS total_sale
     FROM MIS_DASHBOARD_TBL
@@ -59,7 +59,7 @@ export const topBrands = async (whereClause, params) => {
 // 📦 Pieces by AgeBucket
 export const Pieces = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT AgeBucket, SUM(PIECES) AS total_pieces
     FROM MIS_DASHBOARD_TBL
@@ -74,7 +74,7 @@ export const Pieces = async (whereClause, params) => {
 // 👨‍💼 Top Salespersons
 export const topsalesPerson = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT TOP 6 
       SALESPERSON AS salesperson, 
@@ -91,7 +91,7 @@ export const topsalesPerson = async (whereClause, params) => {
 // 🏭 Supplier Sales
 export const supplierSales = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT TOP 6 
       SUPPLIER, 
@@ -108,7 +108,7 @@ export const supplierSales = async (whereClause, params) => {
 // 📊 Age Bucket Wise Sales
 export const agebucketWiseSales = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT TOP 6 AgeBucket, SUM(SALES) AS total_sale
     FROM MIS_DASHBOARD_TBL
@@ -123,7 +123,7 @@ export const agebucketWiseSales = async (whereClause, params) => {
 // 💰 Capital Report
 export const capitalReport = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT 
       FORMAT(VOCDATE, 'yyyy-MM') AS month,
@@ -140,7 +140,7 @@ export const capitalReport = async (whereClause, params) => {
 // 📦 Supplier Profitability
 export const supplier = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT TOP 6
       SUPPLIER,
@@ -159,7 +159,7 @@ export const supplier = async (whereClause, params) => {
 // 💲 Avg Selling Price
 export const avgSellingPrice = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT 
       DATENAME(MONTH, VOCDATE) AS label,
@@ -177,7 +177,7 @@ export const avgSellingPrice = async (whereClause, params) => {
 // 🏢 Branch Sales
 export const branchSales = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT TOP 7 [BRANCH NAME] AS branch, SUM(SALES) AS total_sales
     FROM MIS_DASHBOARD_TBL
@@ -192,7 +192,7 @@ export const branchSales = async (whereClause, params) => {
 // 🏃 Movement Category Comparison
 export const movementCategoryCopmarison = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT 
       CASE 
@@ -217,7 +217,7 @@ export const movementCategoryCopmarison = async (whereClause, params) => {
 // 📦 Quantity Sold
 export const qntySold = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
   const query = `
     SELECT 
       DATENAME(MONTH, VOCDATE) AS month,
@@ -235,7 +235,7 @@ export const qntySold = async (whereClause, params) => {
 // 📊 Dashboard Summary
 export const Summary = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = bindParams(pool.request(), params);
+  const request = buildFilters(pool.request(), params);
 
   // 1️⃣ Total Summary
   const totalResult = await request.query(`
