@@ -5,8 +5,11 @@ import { buildFilters } from '../utils/filters.js';
 // 🚩 INVENTORY MONTHLY SUMMARY
 export const monthlySummary = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = buildFilters(pool.request(), params);
+  const request = pool.request();
 
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
   const query = `
     SELECT
       CAST(YEAR(PURDATE) AS VARCHAR(4)) + '-' + RIGHT('0' + CAST(MONTH(PURDATE) AS VARCHAR(2)), 2) AS Month,
@@ -28,8 +31,11 @@ export const monthlySummary = async (whereClause, params) => {
 // 🚩 SCRAP ANALYSIS
 export const scrap_Analysis = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = buildFilters(pool.request(), params);
+  const request = pool.request();
 
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
   const query = `
     SELECT 
         ISNULL(AgeBucket, 'Unknown') AS AgeBucket,
@@ -49,8 +55,11 @@ export const scrap_Analysis = async (whereClause, params) => {
 // 🚩 INVENTORY MOVEMENT
 export const Inventory_Movement = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = buildFilters(pool.request(), params);
+  const request = pool.request();
 
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
   const query = `
     SELECT 
         YEAR(VOCDATE) AS [Year],
@@ -71,8 +80,11 @@ export const Inventory_Movement = async (whereClause, params) => {
 // 🚩 STOCK REPORT
 export const Stock_Report = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = buildFilters(pool.request(), params);
+  const request = pool.request();
 
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
   const query = `
     SELECT 
         BRAND_CODE,
@@ -96,7 +108,11 @@ export const Stock_Report = async (whereClause, params) => {
 // 🚩 DEAD STOCK
 export const Dead_Stock = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = buildFilters(pool.request(), params);
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
 
   const query = `
     SELECT 
@@ -116,7 +132,11 @@ export const Dead_Stock = async (whereClause, params) => {
 
 export const Inventory_SummaryCards = async (whereClause, params) => {
   const pool = await poolPromise;
-  const request = buildFilters(pool.request(), params);
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
 
   const query = `
     SELECT
