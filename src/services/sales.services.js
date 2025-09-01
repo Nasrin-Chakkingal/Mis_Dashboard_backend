@@ -352,3 +352,265 @@ export const Summary = async (whereClause, params) => {
     piecesSummary: piecesResult.recordset,
   };
 };
+export const customerTrend = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+
+  const query = `  WITH FirstPurchase AS (
+  SELECT 
+    CUSTOMER, 
+    MIN(CONCAT(YEAR(VOCDATE), '-', RIGHT('0' + CAST(MONTH(VOCDATE) AS VARCHAR), 2))) AS FirstPurchaseMonth
+  FROM MIS_DASHBOARD_TBL
+  WHERE CUSTOMER IS NOT NULL AND VOCDATE IS NOT NULL AND (${whereClause})
+        GROUP BY CUSTOMER
+      )
+      SELECT 
+  CONCAT(YEAR(m.VOCDATE), '-', RIGHT('0' + CAST(MONTH(m.VOCDATE) AS VARCHAR), 2)) AS Month,
+  COUNT(DISTINCT m.CUSTOMER) AS TotalCustomers,
+  COUNT(DISTINCT CASE 
+    WHEN CONCAT(YEAR(m.VOCDATE), '-', RIGHT('0' + CAST(MONTH(m.VOCDATE) AS VARCHAR), 2)) = fp.FirstPurchaseMonth 
+    THEN m.CUSTOMER 
+  END) AS NewCustomers
+FROM MIS_DASHBOARD_TBL m
+JOIN FirstPurchase fp ON m.CUSTOMER = fp.CUSTOMER
+WHERE m.CUSTOMER IS NOT NULL AND m.VOCDATE IS NOT NULL AND (${whereClause})
+      GROUP BY CONCAT(YEAR(m.VOCDATE), '-', RIGHT('0' + CAST(MONTH(m.VOCDATE) AS VARCHAR), 2))
+ORDER BY Month; `;
+
+      const { recordset } = await request.query(query);
+  return recordset;
+};
+
+
+export const customerSales = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+
+
+  const query = `    SELECT
+     YEAR(VOCDATE) AS [Year],
+     MONTH(VOCDATE) AS [Month],
+     SUM(SALES) AS TotalSales,
+     SUM(COGS) AS TotalCOGS,
+     COUNT(DISTINCT CUSTOMER) AS CustomerCount,
+    CAST(1.0 * SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgSalesPerCustomer,
+    CAST(1.0 * (SUM(SALES) - SUM(COGS)) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgProfitPerCustomer
+FROM
+  MIS_DASHBOARD_TBL
+WHERE
+  SALES > 0 AND (${whereClause})
+GROUP BY
+  YEAR(VOCDATE), MONTH(VOCDATE)
+ORDER BY
+  YEAR(VOCDATE), MONTH(VOCDATE);
+      
+    `;
+
+      const { recordset } = await request.query(query);
+  return recordset;
+};
+
+
+export const customerQuantity = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+const query = `  
+      SELECT
+  YEAR(VOCDATE) AS [Year],
+  MONTH(VOCDATE) AS [Month],
+  SUM(PIECES) AS TotalQty,
+  COUNT(DISTINCT CUSTOMER) AS CustomerCount,
+  CAST(1.0 * SUM(PIECES) / COUNT(DISTINCT CUSTOMER) AS DECIMAL(10, 2)) AS AvgQtyPerCustomer
+FROM
+  MIS_DASHBOARD_TBL
+WHERE
+  SALES > 0 AND (${whereClause})
+GROUP BY
+  YEAR(VOCDATE), MONTH(VOCDATE)
+ORDER BY
+  YEAR(VOCDATE), MONTH(VOCDATE);
+    `;
+
+      const { recordset } = await request.query(query);
+  return recordset;
+};
+
+// ✅ Route: Avg per Customer Summary
+export const customerSummary = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+const query = `  
+      SELECT COUNT(DISTINCT CUSTOMER) AS TotalCustomers
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALES > 0
+    `;
+  const { recordset } = await request.query(query);
+  return recordset;
+};
+
+
+
+export const monthlySummary = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+  const query = `
+    SELECT
+      CAST(YEAR(PURDATE) AS VARCHAR(4)) + '-' + RIGHT('0' + CAST(MONTH(PURDATE) AS VARCHAR(2)), 2) AS Month,
+      SUM(COGS) AS TotalStockValue,
+      SUM(PIECES) AS TotalQuantity,
+      SUM([GROSS WEIGHT]) AS TotalGrossWeight,
+      SUM([PURE WEIGHT]) AS TotalPureWeight
+    FROM MIS_DASHBOARD_TBL
+    WHERE PURDATE IS NOT NULL AND (${whereClause})
+    GROUP BY YEAR(PURDATE), MONTH(PURDATE)
+    ORDER BY YEAR(PURDATE), MONTH(PURDATE);
+  `;
+
+  const { recordset } = await request.query(query);
+  return recordset;
+};
+
+
+// 🚩 SCRAP ANALYSIS
+export const scrap_Analysis = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+  const query = `
+    SELECT 
+        ISNULL(AgeBucket, 'Unknown') AS AgeBucket,
+        SUM(PIECES) AS ScrapQty,
+        SUM(MKG_STOCKVALUE) AS ScrapValue
+    FROM MIS_DASHBOARD_TBL
+    WHERE UPPER(LTRIM(RTRIM(VOCTYPE))) = 'SCRAP' AND (${whereClause})
+    GROUP BY ISNULL(AgeBucket, 'Unknown')
+    ORDER BY AgeBucket;
+  `;
+
+  const { recordset } = await request.query(query);
+  return recordset;
+};
+
+
+// 🚩 INVENTORY MOVEMENT
+export const Inventory_Movement = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+  const query = `
+    SELECT 
+        YEAR(VOCDATE) AS [Year],
+        MONTH(VOCDATE) AS [Month],
+        SUM(CASE WHEN VOCTYPE = 'PURCHASE' THEN PIECES ELSE 0 END) AS StockIn,
+        SUM(CASE WHEN VOCTYPE = 'SALE' THEN PIECES ELSE 0 END) AS StockOut
+    FROM MIS_DASHBOARD_TBL
+    WHERE VOCDATE IS NOT NULL AND (${whereClause})
+    GROUP BY YEAR(VOCDATE), MONTH(VOCDATE)
+    ORDER BY [Year], [Month];
+  `;
+
+  const { recordset } = await request.query(query);
+  return recordset;
+};
+
+
+// 🚩 STOCK REPORT
+export const Stock_Report = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+  const query = `
+    SELECT 
+        BRAND_CODE,
+        DIVISION_CODE,
+        SUPPLIER,
+        SUM(PIECES) AS TotalQty,
+        SUM(MKG_STOCKVALUE) AS TotalStockValue,
+        SUM([GROSS WEIGHT]) AS TotalGrossWeight,
+        SUM([PURE WEIGHT]) AS TotalPureWeight
+    FROM MIS_DASHBOARD_TBL
+    WHERE VOCTYPE = 'PURCHASE' AND (${whereClause})
+    GROUP BY BRAND_CODE, DIVISION_CODE, SUPPLIER
+    ORDER BY TotalStockValue DESC;
+  `;
+
+  const { recordset } = await request.query(query);
+  return recordset;
+};
+
+
+// 🚩 DEAD STOCK
+export const Dead_Stock = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+
+  const query = `
+    SELECT 
+        ISNULL(AgeBucket, 'Unknown') AS AgeBucket,
+        COUNT([STOCK CODE]) AS DeadStockItems,
+        SUM(PIECES) AS DeadStockQty,
+        SUM(MKG_STOCKVALUE) AS DeadStockValue
+    FROM MIS_DASHBOARD_TBL
+    WHERE SALES = 0 AND (${whereClause})
+    GROUP BY ISNULL(AgeBucket, 'Unknown')
+    ORDER BY AgeBucket;
+  `;
+
+  const { recordset } = await request.query(query);
+  return recordset;
+};
+
+export const Inventory_SummaryCards = async (whereClause, params) => {
+  const pool = await poolPromise;
+  const request = pool.request();
+
+  for (const [key, value] of Object.entries(params)) {
+    request.input(key, value.type, value.value);
+  }
+
+  const query = `
+    SELECT
+      SUM(MKG_STOCKVALUE) AS TotalStockValue,
+      SUM(PIECES) AS TotalQuantity,
+      SUM([GROSS WEIGHT]) AS TotalGrossWeight,
+      SUM([PURE WEIGHT]) AS TotalPureWeight
+    FROM MIS_DASHBOARD_TBL
+    WHERE (${whereClause})
+  `;
+
+  const { recordset } = await request.query(query);
+  return recordset[0]; // return single summary row
+};
