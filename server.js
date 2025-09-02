@@ -1,32 +1,29 @@
-// server.js
 import dotenv from "dotenv";
-dotenv.config();
-
 import express from "express";
 import cors from "cors";
-import routes from "./src/routes/index.routes.js";
-import notFound from "./src/middleware/notfound.js";
+import { connectDB } from "./config/db.js";
 
+// Routes
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import inventoryRoutes from "./routes/inventoryRoutes.js";
+import customerRoutes from "./routes/customerRoutes.js";
+import supplierRoutes from "./routes/supplierRoutes.js";
 
-import "./src/config/db.js"; // initializes pool
-import errorhandler from "./src/middleware/errorhandler.js";
-
-
-
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
 
-// Healthcheck (for Render monitoring)
-app.get("/healthz", (_, res) => res.send("ok"));
+// DB Connection
+connectDB();
 
-// ✅ Mount all routes under /api
-app.use("/api", routes);
-
-app.use(notFound);
-app.use(errorhandler)
+// Routes
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/customers", customerRoutes);
+app.use("/api/suppliers", supplierRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

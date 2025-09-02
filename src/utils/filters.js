@@ -1,8 +1,7 @@
-import sql from "mssql";
+import { sql } from "../config/db.js";
 
 export const buildFilters = (queryParams, request) => {
-  const conditions = ["1=1"]; // always true so AND works
-  const params = {};
+  const conditions = ["1=1"];
 
   if (queryParams.supplier) {
     conditions.push("SUPPLIER = @supplier");
@@ -33,8 +32,5 @@ export const buildFilters = (queryParams, request) => {
     request.input("toDate", sql.Date, queryParams.toDate);
   }
 
-  return {
-    whereClause: conditions.join(" AND "),
-    params,
-  };
+  return conditions.join(" AND ");
 };
