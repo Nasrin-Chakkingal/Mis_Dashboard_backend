@@ -626,6 +626,30 @@ app.get('/api/capital-report', async (req, res) => {
   }
 });
 
+//branch_wise sales
+app.get('/api/branch-sales', async (req, res) => {
+ try {
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT TOP 6
+    [BRANCH NAME],
+    SUM(SALEs) AS TotalSales
+FROM MIS_DASHBOARD_TBL
+ wHERE  (${filters})
+GROUP BY [BRANCH NAME]
+ORDER BY TotalSales DESC; `;
+
+    console.log("✅ Running Query:", query, req.query); // ✅ Debugging
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ branch Sales Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
     app.listen(PORT, () => {
         console.log(`🚀 Server running on port ${PORT}`);
