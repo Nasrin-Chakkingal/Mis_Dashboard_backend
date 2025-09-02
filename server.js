@@ -1,13 +1,14 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import { connectDB } from "./config/db.js";
+
 
 // Routes
-import dashboardRoutes from "./routes/dashboardRoutes.js";
-import inventoryRoutes from "./routes/inventoryRoutes.js";
-import customerRoutes from "./routes/customerRoutes.js";
-import supplierRoutes from "./routes/supplierRoutes.js";
+import dashboardRoutes from "./src/routes/dashboardRoutes.js";
+import inventoryRoutes from "./src/routes/inventoryRoutes.js";
+import customerRoutes from "./src/routes/customerRoutes.js";
+import supplierRoutes from "./src/routes/supplierRoutes.js";
+import { connectDB } from "./src/config/db.js";
 
 dotenv.config();
 const app = express();
@@ -17,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // DB Connection
-connectDB();
+connectDB;
 
 // Routes
 app.use("/api/dashboard", dashboardRoutes);
