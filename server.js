@@ -650,6 +650,31 @@ ORDER BY TotalSales DESC; `;
   }
 });
 
+app.get('/api/branch-customer', async (req, res) => {
+ try {
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT TOP 6
+    [BRANCH NAME] AS Branch,
+    COUNT(DISTINCT CUSTOMER) AS UniqueCustomers
+FROM MIS_DASHBOARD_TBL
+WHERE 1=1  AND (${filters})
+GROUP BY [BRANCH NAME]
+ORDER BY UniqueCustomers DESC`;
+
+    console.log("✅ Running Query:", query, req.query); // ✅ Debugging
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ branch CUTOMER Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+
 
     app.listen(PORT, () => {
         console.log(`🚀 Server running on port ${PORT}`);
