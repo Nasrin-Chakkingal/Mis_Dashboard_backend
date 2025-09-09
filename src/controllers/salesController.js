@@ -4,7 +4,7 @@ import { getMonthlySales } from "../services/salesService.js";
 
 export const getMonthlySalesController = async (req, res) => {
   try {
-    const pool =  poolPromise;
+    const pool = await poolPromise;
     const request = pool.request();
     const filters = buildFilters(req.query, request);
 

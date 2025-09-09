@@ -508,20 +508,16 @@ app.get('/api/customer-qnty', async (req, res) => {
     const filters = buildFilters(req.query, request);
 
     const query = `
-      SELECT
-  YEAR(VOCDATE) AS [Year],
-  MONTH(VOCDATE) AS [Month],
-  SUM(PIECES) AS TotalQty,
-  COUNT(DISTINCT CUSTOMER) AS CustomerCount,
-  CAST(1.0 * SUM(PIECES) / COUNT(DISTINCT CUSTOMER) AS DECIMAL(10, 2)) AS AvgQtyPerCustomer
-FROM
-  MIS_DASHBOARD_TBL
-WHERE
-  SALES > 0 AND (${filters})
-GROUP BY
-  YEAR(VOCDATE), MONTH(VOCDATE)
-ORDER BY
-  YEAR(VOCDATE), MONTH(VOCDATE);
+     SELECT
+  CAST(YEAR(VOCDATE) AS VARCHAR(4)) + '-' + CAST(MONTH(VOCDATE) AS VARCHAR(2)) AS YearMonth,
+  SUM(PIECES) AS TotalQty,
+  COUNT(DISTINCT CUSTOMER) AS CustomerCount,
+  CAST(1.0 * SUM(PIECES) / COUNT(DISTINCT CUSTOMER) AS DECIMAL(10, 2)) AS AvgQtyPerCustomer
+FROM MIS_DASHBOARD_TBL
+WHERE SALES > 0 AND (${filters})
+GROUP BY YEAR(VOCDATE), MONTH(VOCDATE)
+ORDER BY YEAR(VOCDATE), MONTH(VOCDATE);
+
     `;
 
     const result = await request.query(query);

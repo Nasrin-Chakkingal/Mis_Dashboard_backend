@@ -1,5 +1,5 @@
 
-import { sql } from "../config/db.js";
+import { poolPromise } from "../config/db.js";
 
 export const getMonthlySales = async (filters, request) => {
   const query = `
