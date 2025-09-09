@@ -466,38 +466,33 @@ app.get("/api/top-salespersons", async (req, res) => {
 });
 
 app.get('/api/customer-sales', async (req, res) => {
+  try {
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
 
-    try {
-    const request = pool.request();
-    const filters = buildFilters(req.query, request);
+    const query = `
+      SELECT
+        CAST(YEAR(VOCDATE) AS VARCHAR(4)) + '-' +
+        RIGHT('0' + CAST(MONTH(VOCDATE) AS VARCHAR(2)), 2) AS YearMonth,
+        SUM(SALES) AS TotalSales,
+        SUM(COGS) AS TotalCOGS,
+        COUNT(DISTINCT CUSTOMER) AS CustomerCount,
+        CAST(1.0 * SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgSalesPerCustomer,
+        CAST(1.0 * (SUM(SALES) - SUM(COGS)) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgProfitPerCustomer
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALES > 0 AND (${filters})
+      GROUP BY YEAR(VOCDATE), MONTH(VOCDATE)
+      ORDER BY YEAR(VOCDATE), MONTH(VOCDATE);
+    `;
 
-    const query = `
-    SELECT
-     YEAR(VOCDATE) AS [Year],
-     MONTH(VOCDATE) AS [Month],
-     SUM(SALES) AS TotalSales,
-     SUM(COGS) AS TotalCOGS,
-     COUNT(DISTINCT CUSTOMER) AS CustomerCount,
-    CAST(1.0 * SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgSalesPerCustomer,
-    CAST(1.0 * (SUM(SALES) - SUM(COGS)) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS DECIMAL(10, 2)) AS AvgProfitPerCustomer
-FROM
-  MIS_DASHBOARD_TBL
-WHERE
-  SALES > 0 AND (${filters})
-GROUP BY
-  YEAR(VOCDATE), MONTH(VOCDATE)
-ORDER BY
-  YEAR(VOCDATE), MONTH(VOCDATE);
- 
-    `;
-
-    const result = await request.query(query);
-    res.json({ data: result.recordset });
-  } catch (err) {
-    console.error("❌ Customer-wise sales error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Customer-wise sales error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
 
 
 
