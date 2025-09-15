@@ -3,8 +3,6 @@ import cron from "node-cron";
 dotenv.config();
 
 import app from "./src/app.js";
-import { poolPromise } from "./src/config/db.js";   // ✅ Import poolPromise
-
 async function refreshDashboardTable() {
   try {
     const pool = await poolPromise;
