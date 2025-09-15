@@ -3,7 +3,9 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const distPath = path.join(__dirname, "../../dist");
+
+// ✅ Point to React build
+const distPath = path.join(__dirname, "../../MIS_Dashboard/dist");
 
 export default (req, res, next) => {
   if (req.originalUrl.startsWith("/api")) {

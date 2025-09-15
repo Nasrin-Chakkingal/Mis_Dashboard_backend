@@ -15,6 +15,9 @@ import errorHandler from "./middleware/errorHandler.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ✅ Point to React build (same as notFound.js)
+const distPath = path.join(__dirname, "../MIS_Dashboard/dist");
+
 const app = express();
 
 app.use(cors());
@@ -28,13 +31,12 @@ app.use("/api", summaryRoutes);
 app.use("/api", inventoryRoutes);
 
 // ✅ Serve React build
-const distPath = path.join(__dirname, "../dist");
 app.use(express.static(distPath));
 
-// ✅ Catch-all and API 404s handled in notFound.js
+// ✅ Fallback handler (API 404 → JSON, UI → React index.html)
 app.use(notFound);
 
-// ✅ Error handler
+// ✅ Global error handler
 app.use(errorHandler);
 
 export default app;
