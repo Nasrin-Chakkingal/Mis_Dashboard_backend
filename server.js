@@ -3,10 +3,13 @@ import cron from "node-cron";
 dotenv.config();
 
 import app from "./src/app.js";
+import { getPool } from "./src/config/db.js";
+
+
 async function refreshDashboardTable() {
   try {
-    const pool = await poolPromise;
-    await pool.request().execute("sp_Load_MIS_Dashboard");  // ✅ stored procedure
+    const pool = await getPool();   // ✅ use your helper
+    await pool.request().execute("sp_Load_MIS_Dashboard");
     console.log("✅ MIS_DASHBOARD_TBL refreshed successfully");
   } catch (err) {
     console.error("❌ Error refreshing dashboard:", err);
