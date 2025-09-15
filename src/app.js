@@ -7,6 +7,9 @@ import filterRoutes from "./routes/filter.routes.js"
 import summaryRoutes from "./routes/summary.routes.js"
 import inventoryRoutes from "./routes/inventory.routes.js"
 
+import notFound from "./middleware/notfound.js"; 
+import errorHandler from "./middleware/errorhandler.js"; 
+
 
 const app = express();
 
@@ -20,4 +23,6 @@ app.use("/api", filterRoutes);
 app.use("/api", summaryRoutes);
 app.use("/api", inventoryRoutes);
 
+app.use(errorHandler);
+app.use(notFound);
 export default app;
