@@ -9,8 +9,8 @@ import filterRoutes from "./routes/filter.routes.js";
 import summaryRoutes from "./routes/summary.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
 
-import notFound from "./middleware/notfound.js"; 
-import errorHandler from "./middleware/errorhandler.js"; 
+import notFound from "./middleware/notFound.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,15 +28,13 @@ app.use("/api", summaryRoutes);
 app.use("/api", inventoryRoutes);
 
 // ✅ Serve React build
-const distPath = path.join(__dirname, "../dist");  // adjust if needed
+const distPath = path.join(__dirname, "../dist");
 app.use(express.static(distPath));
 
-// ✅ Catch-all for React Router
-app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
-});
-// ✅ Error handling should always be last
+// ✅ Catch-all and API 404s handled in notFound.js
 app.use(notFound);
+
+// ✅ Error handler
 app.use(errorHandler);
 
 export default app;
