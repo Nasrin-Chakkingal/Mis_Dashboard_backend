@@ -50,19 +50,52 @@ export async function getMonthlySales(req, res) {
     const filters = buildFilters(req.query, request);
 
     const query = `
-    SELECT
+      SELECT
         DATENAME(MONTH, VOCDATE) AS label,
         MONTH(VOCDATE) AS sort_order,
         SUM(SALES) * 1.0 / NULLIF(SUM(PIECES), 0) AS avg_selling_price
       FROM MIS_DASHBOARD_TBL
       WHERE SALES IS NOT NULL AND PIECES IS NOT NULL AND (${filters})
       GROUP BY DATENAME(MONTH, VOCDATE), MONTH(VOCDATE)
-      ORDER BY MONTH(VOCDATE);
-  `;
+      ORDER BY sort_order;
+    `;
 
-   res.json({ unit, data });
+    const result = await request.query(query);
+
+    res.json({
+      data: result.recordset, // ✅ frontend expects "data"
+    });
   } catch (err) {
-    console.error("❌ Monthly Sales Error:", err);
+    console.error("❌ Avg Selling Price Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+
+export async function getQntySold(req, res) {
+  try {
+    const pool = await getPool();
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT
+        DATENAME(MONTH, VOCDATE) AS month,
+        MONTH(VOCDATE) AS month_order,
+        SUM(PIECES) AS qty_sold
+      FROM MIS_DASHBOARD_TBL
+      WHERE PIECES IS NOT NULL AND (${filters})
+      GROUP BY DATENAME(MONTH, VOCDATE), MONTH(VOCDATE)
+      ORDER BY month_order;
+    `;
+
+    const result = await request.query(query);
+
+    res.json({
+      data: result.recordset,
+    });
+  } catch (err) {
+    console.error("❌ Qounatity Sold Error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
