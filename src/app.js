@@ -3,7 +3,10 @@ import cors from "cors";
 
 import salesRoutes from "./routes/sales.routes.js";
 import customerRoutes from "./routes/customer.routes.js"
-// import other routes here...
+import filterRoutes from "./routes/filter.routes.js"
+import summaryRoutes from "./routes/summary.routes.js"
+import inventoryRoutes from "./routes/inventory.routes.js"
+
 
 const app = express();
 
@@ -13,6 +16,8 @@ app.use(express.json());
 // Routes
 app.use("/api", salesRoutes);
 app.use("/api", customerRoutes);
-// app.use("/api", supplierRoutes);
+app.use("/api", filterRoutes);
+app.use("/api", summaryRoutes);
+app.use("/api", inventoryRoutes);
 
 export default app;
