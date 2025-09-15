@@ -20,7 +20,7 @@ export async function getCapitalReport(req, res) {
     `;
 
     const result = await request.query(query);
-    res.json(result.recordset);
+    res.json({ data: result.recordset });
   } catch (err) {
     console.error("❌ Capital report Error:", err.message);
     res.status(500).json({ error: "Internal Server Error" });
@@ -43,7 +43,7 @@ export async function getPieces(req, res) {
     `;
 
     const result = await request.query(query);
-    res.json(result.recordset);
+    res.json({ data: result.recordset });
   } catch (err) {
     console.error("❌ Pieces Error:", err.message);
     res.status(500).json({ error: "Internal Server Error" });
