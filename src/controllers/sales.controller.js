@@ -42,3 +42,27 @@ export async function getMonthlySales(req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+  export async function getAvgSellingPrice(req, res) {
+  try {
+    const pool = await getPool();
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+    SELECT
+        DATENAME(MONTH, VOCDATE) AS label,
+        MONTH(VOCDATE) AS sort_order,
+        SUM(SALES) * 1.0 / NULLIF(SUM(PIECES), 0) AS avg_selling_price
+      FROM MIS_DASHBOARD_TBL
+      WHERE SALES IS NOT NULL AND PIECES IS NOT NULL AND (${filters})
+      GROUP BY DATENAME(MONTH, VOCDATE), MONTH(VOCDATE)
+      ORDER BY MONTH(VOCDATE);
+  `;
+
+   res.json({ unit, data });
+  } catch (err) {
+    console.error("❌ Monthly Sales Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
