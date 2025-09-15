@@ -1,8 +1,8 @@
 import express from "express";
-import { getMonthlySalesController } from "../controllers/salesController.js";
+import { getMonthlySales } from "../controllers/salesController.js";
 
 const router = express.Router();
 
-router.get("/monthly-sales", getMonthlySalesController);
+router.get("/monthly-sales", getMonthlySales);
 
 export default router;
