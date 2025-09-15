@@ -9,8 +9,8 @@ import filterRoutes from "./routes/filter.routes.js";
 import summaryRoutes from "./routes/summary.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
 
-import notFound from "./middleware/notFound.js";
-import errorHandler from "./middleware/errorHandler.js";
+import notFound from "./middleware/notfound.js";
+import errorHandler from "./middleware/errorhandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
