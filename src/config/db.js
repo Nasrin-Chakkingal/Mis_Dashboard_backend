@@ -1,6 +1,4 @@
 import sql from "mssql";
-import dotenv from "dotenv";
-dotenv.config();
 
 const config = {
   user: process.env.DB_USER,
@@ -20,5 +18,19 @@ const config = {
   },
 };
 
-export const poolPromise = sql.connect(config);
+let pool;
+
+export async function getPool() {
+  if (!pool) {
+    try {
+      pool = await sql.connect(config);
+      console.log("✅ Connected to SQL Server");
+    } catch (err) {
+      console.error("❌ DB connection failed:", err);
+      throw err;
+    }
+  }
+  return pool;
+}
+
 export { sql };
