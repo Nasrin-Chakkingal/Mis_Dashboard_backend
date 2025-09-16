@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { fileURLToPath } from "url";
-import path from "path";
+
 
 import salesRoutes from "./routes/sales.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
