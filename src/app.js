@@ -32,15 +32,5 @@ app.use(errorHandler);
 
 app.get("/healthz", (_, res) => res.send("ok"));
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.join(__dirname, '../dist');
-  app.use(express.static(frontendPath));
-  app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
-}
 
 export default app;
