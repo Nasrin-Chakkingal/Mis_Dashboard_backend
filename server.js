@@ -36,7 +36,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendPath));
 
   // ✅ React Router fallback
-  app.get("*", (req, res) => {
+  app.get("(/^\/(?!api).*/)", (req, res) => {
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
