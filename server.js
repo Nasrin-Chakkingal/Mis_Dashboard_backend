@@ -1,13 +1,13 @@
+import express from "express";
 import dotenv from "dotenv";
 import cron from "node-cron";
+import path from "path";
+import { fileURLToPath } from "url";
 
-import path from 'path';
-import { fileURLToPath } from 'url';
 dotenv.config();
 
 import app from "./src/app.js";
 import { getPool } from "./src/config/db.js";
-
 
 async function refreshDashboardTable() {
   try {
@@ -28,12 +28,17 @@ const PORT = process.env.PORT || 3001;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.join(__dirname, '../dist');
+if (process.env.NODE_ENV === "production") {
+  // ✅ Correct frontend path
+  const frontendPath = path.join(__dirname, "MIS_Dashboard", "dist");
+
+  // ✅ Serve static assets
   app.use(express.static(frontendPath));
-  app.get('/*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
+
+  // ✅ React Router fallback
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
 }
 
 app.listen(PORT, () => {
