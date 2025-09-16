@@ -12,11 +12,6 @@ import inventoryRoutes from "./routes/inventory.routes.js";
 import notFound from "./middleware/notfound.js";
 import errorHandler from "./middleware/errorhandler.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ✅ Point to React build (same as notFound.js)
-const distPath = path.join(__dirname, "../MIS_Dashboard/dist");
 
 const app = express();
 
@@ -30,13 +25,22 @@ app.use("/api", filterRoutes);
 app.use("/api", summaryRoutes);
 app.use("/api", inventoryRoutes);
 
-// ✅ Serve React build
-app.use(express.static(distPath));
 
-// ✅ Fallback handler (API 404 → JSON, UI → React index.html)
+
 app.use(notFound);
-
-// ✅ Global error handler
 app.use(errorHandler);
+
+app.get("/healthz", (_, res) => res.send("ok"));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../dist');
+  app.use(express.static(frontendPath));
+  app.get('/*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+}
 
 export default app;
