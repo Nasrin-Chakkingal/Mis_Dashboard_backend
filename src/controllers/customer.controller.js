@@ -121,3 +121,95 @@ export async function getBranchCustomer(req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+
+// controllers/customerSegmentation.js
+import { getPool } from "../db.js";
+import { buildFilters } from "../utils/buildFilters.js";
+
+export async function getCustomerSegmentation(req, res) {
+  try {
+    const pool = await getPool();
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      WITH CustomerBase AS (
+          SELECT
+              CUSTOMER,
+              MAX(VOCDATE) AS LastPurchase,
+              COUNT(*) AS Frequency,
+              SUM(SALES) AS Monetary
+          FROM MIS_DASHBOARD_TBL
+          WHERE CUSTOMER IS NOT NULL AND (${filters})
+          GROUP BY CUSTOMER
+      ),
+      Segmented AS (
+          SELECT
+              CUSTOMER,
+              CASE 
+                  WHEN DATEDIFF(DAY, LastPurchase, GETDATE()) <= 30 THEN 'Recent'
+                  WHEN DATEDIFF(DAY, LastPurchase, GETDATE()) <= 90 THEN 'Warm'
+                  ELSE 'Inactive'
+              END AS R_Segment,
+              CASE 
+                  WHEN Frequency >= 10 THEN 'Frequent'
+                  WHEN Frequency >= 5 THEN 'Moderate'
+                  ELSE 'Rare'
+              END AS F_Segment,
+              CASE 
+                  WHEN Monetary >= 10000 THEN 'High'
+                  WHEN Monetary >= 5000 THEN 'Medium'
+                  ELSE 'Low'
+              END AS M_Segment,
+              CASE 
+                  WHEN Monetary < 2000 THEN 'Need to Spend'
+                  ELSE 'Healthy'
+              END AS SpendFlag
+          FROM CustomerBase
+      )
+      SELECT 
+          R_Segment,
+          F_Segment,
+          M_Segment,
+          SpendFlag,
+          COUNT(*) AS CustomerCount
+      FROM Segmented
+      GROUP BY R_Segment, F_Segment, M_Segment, SpendFlag
+      ORDER BY CustomerCount DESC;
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Customer Segmentation Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+
+export async function getAvgSpendPerVocno(req, res) {
+  try {
+    const pool = await getPool();
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT 
+        VOCNO,
+        SUM(SALES) AS TotalSales,
+        COUNT(DISTINCT CUSTOMER) AS UniqueCustomers,
+        SUM(SALES) * 1.0 / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS AvgSpendPerCustomer
+      FROM MIS_DASHBOARD_TBL
+      WHERE VOCTYPE = 'POS' AND (${filters})
+      GROUP BY VOCNO
+      ORDER BY VOCNO DESC;
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Avg Spend VOCNO Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

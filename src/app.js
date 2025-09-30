@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 
+
+
 import salesRoutes from "./routes/sales.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
 import filterRoutes from "./routes/filter.routes.js";
@@ -9,6 +11,7 @@ import inventoryRoutes from "./routes/inventory.routes.js";
 
 import notFound from "./middleware/notfound.js";
 import errorHandler from "./middleware/errorhandler.js";
+
 
 const app = express();
 
@@ -22,10 +25,15 @@ app.use("/api", filterRoutes);
 app.use("/api", summaryRoutes);
 app.use("/api", inventoryRoutes);
 
-app.get("/healthz", (_, res) => res.send("ok"));
 
-// Error handlers
+
 app.use(notFound);
 app.use(errorHandler);
+
+app.get("/healthz", (_, res) => res.send("ok"));
+
+
+
+
 
 export default app;
