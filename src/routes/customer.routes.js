@@ -1,5 +1,5 @@
 import express from "express";
-import { getAvgSpendPerVocno,
+import { getAvgSpend, getAvgSpendPerVocno,
     getBranchCustomer, 
     getCustomerQnty, 
     getCustomerSales, 
@@ -14,6 +14,6 @@ router.get("/customer-qnty", getCustomerQnty);
 router.get("/branch-customer", getBranchCustomer);
 router.get("/customer-segmentation", getCustomerSegmentation);
 router.get("/avg-spend", getAvgSpendPerVocno);
-
+router.get("/totalavg-spend", getAvgSpend);
 
 export default router;

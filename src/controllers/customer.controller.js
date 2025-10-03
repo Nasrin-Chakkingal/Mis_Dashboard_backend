@@ -190,22 +190,45 @@ export async function getAvgSpendPerVocno(req, res) {
     const request = pool.request();
     const filters = buildFilters(req.query, request);
 
-    const query = `
-      SELECT 
+  const query = `
+      SELECT TOP 6 
         VOCNO,
-        SUM(SALES) AS TotalSales,
-        COUNT(DISTINCT CUSTOMER) AS UniqueCustomers,
-        SUM(SALES) * 1.0 / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS AvgSpendPerCustomer
+        SUM(SALES) AS TotalSpend
       FROM MIS_DASHBOARD_TBL
       WHERE VOCTYPE = 'POS' AND (${filters})
       GROUP BY VOCNO
-      ORDER BY VOCNO DESC;
+      ORDER BY TotalSpend DESC;
     `;
 
     const result = await request.query(query);
     res.json({ data: result.recordset });
   } catch (err) {
     console.error("❌ Avg Spend VOCNO Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+export async function getAvgSpend(req, res) {
+  try {
+    const pool = await getPool();
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT 
+        AVG(TransactionTotal) AS AvgSpend
+      FROM (
+        SELECT VOCNO, SUM(SALES) AS TransactionTotal
+        FROM MIS_DASHBOARD_TBL
+        WHERE VOCTYPE = 'POS' AND (${filters})
+        GROUP BY VOCNO
+      ) T;
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset[0] });
+  } catch (err) {
+    console.error("❌ Avg Spend Error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
