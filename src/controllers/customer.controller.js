@@ -123,10 +123,6 @@ export async function getBranchCustomer(req, res) {
 }
 
 
-// controllers/customerSegmentation.js
-import { getPool } from "../db.js";
-import { buildFilters } from "../utils/buildFilters.js";
-
 export async function getCustomerSegmentation(req, res) {
   try {
     const pool = await getPool();
