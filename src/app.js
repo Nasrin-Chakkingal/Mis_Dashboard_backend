@@ -33,7 +33,15 @@ app.use(errorHandler);
 app.get("/healthz", (_, res) => res.send("ok"));
 
 
-
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const pool = await getPool();
+    const result = await pool.request().query("SELECT GETDATE() AS current_time");
+    res.json({ success: true, result: result.recordset });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 
 export default app;

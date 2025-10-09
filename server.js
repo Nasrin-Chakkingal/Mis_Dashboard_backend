@@ -1,9 +1,18 @@
 import dotenv from "dotenv";
-import cron from "node-cron";
-dotenv.config();
 
+
+dotenv.config({ path: "./.env" });
+import cron from "node-cron";
 import app from "./src/app.js";
 import { getPool } from "./src/config/db.js";
+
+
+console.log("DEBUG: Loaded env variables:", {
+  LOCAL_DB_SERVER: process.env.LOCAL_DB_SERVER,
+  LOCAL_DB_USER: process.env.LOCAL_DB_USER,
+  LOCAL_DB_DATABASE: process.env.LOCAL_DB_DATABASE,
+  LOCAL_DB_PORT: process.env.LOCAL_DB_PORT,
+});
 
 
 async function refreshDashboardTable() {

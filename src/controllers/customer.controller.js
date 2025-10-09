@@ -232,3 +232,36 @@ export async function getAvgSpend(req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+
+export async function getCampaign(req, res) {
+  try {
+    const pool = await getPool();
+    const request = pool.request();
+    const filters = buildFilters(req.query, request);
+
+    const query = `
+      SELECT top 10
+        ISNULL([BRANCH NAME], 'All Branches') AS Branch,
+        ISNULL(DIVISION_CODE, 'All Divisions') AS Division,
+        ISNULL(BRAND_CODE, 'All Brands') AS Brand,
+        ISNULL(TYPE_CODE, 'All Types') AS Type,
+        MIN(VOCDATE) AS StartDate,
+        MAX(VOCDATE) AS EndDate,
+        COUNT(DISTINCT VOCNO) AS Transactions,
+        COUNT(DISTINCT CUSTOMER) AS Footfall,
+        SUM(SALES) AS TotalSales,
+        SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS AvgSpendPerCustomer
+      FROM MIS_DASHBOARD_TBL
+      WHERE VOCTYPE = 'POS' AND (${filters})
+      GROUP BY [BRANCH NAME], DIVISION_CODE, BRAND_CODE, TYPE_CODE
+      ORDER BY TotalSales DESC;
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Campaign Summary Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

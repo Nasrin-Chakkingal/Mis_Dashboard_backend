@@ -12,7 +12,7 @@ export async function getCapitalReport(req, res) {
     const query = `
       SELECT
         FORMAT(VOCDATE, 'yyyy-MM') AS month,
-        SUM(MKG_STOCKVALUE) AS totalStockValue
+        SUM(COGS) AS totalStockValue
       FROM MIS_DASHBOARD_TBL
       WHERE (${filters})
       GROUP BY FORMAT(VOCDATE, 'yyyy-MM')
