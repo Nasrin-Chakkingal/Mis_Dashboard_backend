@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
-
-
+import { getPool } from "./config/db.js";
 
 import salesRoutes from "./routes/sales.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
@@ -11,7 +10,6 @@ import inventoryRoutes from "./routes/inventory.routes.js";
 
 import notFound from "./middleware/notfound.js";
 import errorHandler from "./middleware/errorhandler.js";
-
 
 const app = express();
 
@@ -25,23 +23,23 @@ app.use("/api", filterRoutes);
 app.use("/api", summaryRoutes);
 app.use("/api", inventoryRoutes);
 
-
-
-app.use(notFound);
-app.use(errorHandler);
-
+// ✅ Health check
 app.get("/healthz", (_, res) => res.send("ok"));
 
-
+// ✅ Test DB route
 app.get("/api/test-db", async (req, res) => {
   try {
     const pool = await getPool();
-    const result = await pool.request().query("SELECT GETDATE() AS current_time");
+    const result = await pool.request().query("SELECT CAST(GETDATE() AS time) AS now");
     res.json({ success: true, result: result.recordset });
   } catch (error) {
+    console.error("❌ DB test error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// ✅ Error middleware (always last)
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;

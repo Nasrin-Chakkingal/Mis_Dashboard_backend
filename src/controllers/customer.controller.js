@@ -265,3 +265,42 @@ export async function getCampaign(req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+
+// routes/loyalty.js or inside your controller
+
+export async function getLoyaltyProgram(req, res) {
+  try {
+    const pool = await getPool();
+    const request = pool.request();
+
+    // Build dynamic filters from query params
+    const filters = buildFilters(req.query, request);
+
+    // Loyalty Program Metrics
+    const query = `
+      SELECT TOP 10
+        ISNULL([BRANCH NAME], 'All Branches') AS Branch,
+        ISNULL(DIVISION_CODE, 'All Divisions') AS Division,
+        ISNULL(BRAND_CODE, 'All Brands') AS Brand,
+        ISNULL(TYPE_CODE, 'All Types') AS Type,
+        COUNT(DISTINCT CUSTOMER) AS LoyaltyCustomers,
+        COUNT(DISTINCT VOCNO) AS LoyaltyTransactions,
+        SUM(SALES) AS LoyaltySales,
+        SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS AvgLoyaltySpend,
+        MIN(VOCDATE) AS FirstPurchase,
+        MAX(VOCDATE) AS LastPurchase
+      FROM MIS_DASHBOARD_TBL
+      WHERE VOCTYPE = 'POS' 
+        AND (${filters})
+      GROUP BY [BRANCH NAME], DIVISION_CODE, BRAND_CODE, TYPE_CODE
+      ORDER BY LoyaltySales DESC;
+    `;
+
+    const result = await request.query(query);
+    res.json({ data: result.recordset });
+  } catch (err) {
+    console.error("❌ Loyalty Program Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

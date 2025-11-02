@@ -1,11 +1,9 @@
 import dotenv from "dotenv";
-
-
 dotenv.config({ path: "./.env" });
-import cron from "node-cron";
-import app from "./src/app.js";
-import { getPool } from "./src/config/db.js";
 
+import cron from "node-cron";
+import app from "./src/app.js";        // ✅ make sure path is correct
+import { getPool } from "./src/config/db.js";
 
 console.log("DEBUG: Loaded env variables:", {
   LOCAL_DB_SERVER: process.env.LOCAL_DB_SERVER,
@@ -13,7 +11,6 @@ console.log("DEBUG: Loaded env variables:", {
   LOCAL_DB_DATABASE: process.env.LOCAL_DB_DATABASE,
   LOCAL_DB_PORT: process.env.LOCAL_DB_PORT,
 });
-
 
 async function refreshDashboardTable() {
   try {
@@ -26,12 +23,9 @@ async function refreshDashboardTable() {
 }
 
 // Run every day at 1 AM
-cron.schedule("0 1 * * *", () => {
-  refreshDashboardTable();
-});
+cron.schedule("0 1 * * *", refreshDashboardTable);
 
 const PORT = process.env.PORT || 3001;
-
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

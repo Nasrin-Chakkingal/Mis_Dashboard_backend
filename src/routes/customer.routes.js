@@ -6,7 +6,10 @@ import { getAvgSpend,
     getCustomerQnty, 
     getCustomerSales, 
     getCustomerSegmentation, 
-    getCustomerTrend } from "../controllers/customer.controller.js";
+    getCustomerTrend,
+    getLoyaltyProgram, 
+    } from "../controllers/customer.controller.js";
+import { getCampaignSummary } from "../../../MIS_Dashboard/src/api/api.js";
 
 const router = express.Router();
 
@@ -18,4 +21,6 @@ router.get("/customer-segmentation", getCustomerSegmentation);
 router.get("/avg-spend", getAvgSpendPerVocno);
 router.get("/totalavg-spend", getAvgSpend);
 router.get("/campaigns", getCampaign);
+router.get("/loyalty-program", getLoyaltyProgram);
+
 export default router;
