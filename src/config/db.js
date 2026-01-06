@@ -2,6 +2,12 @@ import sql from "mssql";
 import dotenv from "dotenv";
 dotenv.config();
 
+const required = ["AWS_DB_SERVER", "AWS_DB_USER", "AWS_DB_PASSWORD", "AWS_DB_DATABASE"];
+required.forEach((key) => {
+  if (!process.env[key]) {
+    throw new Error(`❌ Missing environment variable: ${key}`);
+  }
+});
 /*console.log("DEBUG DB ENV:", {
   server: process.env.LOCAL_DB_SERVER,
   user: process.env.LOCAL_DB_USER,
