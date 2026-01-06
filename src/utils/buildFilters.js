@@ -3,30 +3,37 @@ import { sql } from "../config/db.js";
 export function buildFilters(queryParams, request) {
   const conditions = ["1=1"];
 
-  if (queryParams.supplier) {
-    conditions.push("SUPPLIER = @supplier");
-    request.input("supplier", sql.VarChar, queryParams.supplier);
+  // Map frontend keys to DB columns
+  const filterMap = {
+    supplier: "SUPPLIER",
+    brand_code: "BRAND_CODE",
+    division_code: "DIVISION_CODE",
+    type_code: "TYPE_CODE",
+    branch_code: "BRANCH_CODE",
+  };
+
+  // 🔁 Handle multi-select filters
+  for (const key in filterMap) {
+    const column = filterMap[key];
+    const values = queryParams[key];
+
+    if (Array.isArray(values) && values.length > 0) {
+      const placeholders = values.map((_, i) => `@${key}${i}`);
+
+      conditions.push(`${column} IN (${placeholders.join(", ")})`);
+
+      values.forEach((obj, i) => {
+        request.input(`${key}${i}`, sql.VarChar, obj.value);
+      });
+    }
   }
-  if (queryParams.brand_code) {
-    conditions.push("BRAND_CODE = @brand_code");
-    request.input("brand_code", sql.VarChar, queryParams.brand_code);
-  }
-  if (queryParams.division_code) {
-    conditions.push("DIVISION_CODE = @division_code");
-    request.input("division_code", sql.VarChar, queryParams.division_code);
-  }
-  if (queryParams.type_code) {
-    conditions.push("TYPE_CODE = @type_code");
-    request.input("type_code", sql.VarChar, queryParams.type_code);
-  }
-  if (queryParams.branch_code) {
-    conditions.push("BRANCH_CODE = @branch_code");
-    request.input("branch_code", sql.VarChar, queryParams.branch_code);
-  }
+
+  // 📅 Date filters
   if (queryParams.fromDate) {
     conditions.push("VOCDATE >= @fromDate");
     request.input("fromDate", sql.Date, queryParams.fromDate);
   }
+
   if (queryParams.toDate) {
     conditions.push("VOCDATE <= @toDate");
     request.input("toDate", sql.Date, queryParams.toDate);

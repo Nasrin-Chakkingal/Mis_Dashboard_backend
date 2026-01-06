@@ -29,7 +29,7 @@ export async function getCustomerTrend(req, res) {
       GROUP BY CONCAT(YEAR(m.VOCDATE), '-', RIGHT('0' + CAST(MONTH(m.VOCDATE) AS VARCHAR), 2))
       ORDER BY Month;
     `;
-
+ 
     const result = await request.query(query);
     res.json({ data: result.recordset });
   } catch (err) {

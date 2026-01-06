@@ -239,6 +239,7 @@ export async function getSupplier(req, res) {
 
     const result = await request.query(query);
 
+
     res.json({
       data: result.recordset,
     });

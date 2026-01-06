@@ -23,4 +23,4 @@ router.get("/totalavg-spend", getAvgSpend);
 router.get("/campaigns", getCampaign);
 router.get("/loyalty-program", getLoyaltyProgram);
 
-export default router;
+export default router; 
