@@ -9,7 +9,7 @@ import { getAvgSpend,
     getCustomerTrend,
     getLoyaltyProgram, 
     } from "../controllers/customer.controller.js";
-import { getCampaignSummary } from "../../../MIS_Dashboard/src/api/api.js";
+
 
 const router = express.Router();
 
