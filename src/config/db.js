@@ -15,8 +15,7 @@ required.forEach((key) => {
   port: process.env.LOCAL_DB_PORT
 });*/
 // Determine environment (local or production)
-const isProduction = process.env.NODE_ENV === "production";
-
+const isProduction = process.env.NODE_ENV === "production"; 
 let config;
 
 // 🌐 AWS (SQL Authentication)
