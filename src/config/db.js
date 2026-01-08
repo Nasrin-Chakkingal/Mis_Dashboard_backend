@@ -28,7 +28,7 @@ if (isProduction) {
     port: parseInt(process.env.AWS_DB_PORT) || 1433,
     options: {
       encrypt: true,                 // ✅ Required for RDS / cloud servers
-      trustServerCertificate: false,
+      trustServerCertificate: true,
     },
     pool: {
       max: 10,
