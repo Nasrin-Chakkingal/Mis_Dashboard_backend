@@ -7,6 +7,7 @@ import customerRoutes from "./routes/customer.routes.js";
 import filterRoutes from "./routes/filter.routes.js";
 import summaryRoutes from "./routes/summary.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
+import MHRoutes from "./routes/MH.routes.js";
 
 import notFound from "./middleware/notfound.js";
 import errorHandler from "./middleware/errorhandler.js";
@@ -22,6 +23,8 @@ app.use("/api", customerRoutes);
 app.use("/api", filterRoutes);
 app.use("/api", summaryRoutes);
 app.use("/api", inventoryRoutes);
+app.use("/api", MHRoutes);
+
 
 // ✅ Health check
 app.get("/healthz", (_, res) => res.send("ok"));

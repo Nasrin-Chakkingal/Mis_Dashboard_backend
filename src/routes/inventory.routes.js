@@ -1,5 +1,6 @@
 import express from "express";
-import { getCapitalReport, getMovementCategoryComparison, getPieces } from "../controllers/inventory.controller.js";
+import { getCapitalReport, 
+    getMovementCategoryComparison, getPieces } from "../controllers/inventory.controller.js";
 
 const router = express.Router();
 router.get("/capital-report", getCapitalReport);

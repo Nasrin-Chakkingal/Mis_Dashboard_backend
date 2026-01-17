@@ -1,9 +1,8 @@
-import { sql } from "../config/db.js";
+import sql from "mssql";
 
-export function buildFilters(queryParams, request) {
-  const conditions = ["1=1"];
+export function buildFilters(query, request) {
+  const conditions = [];
 
-  // Map frontend keys to DB columns
   const filterMap = {
     supplier: "SUPPLIER",
     brand_code: "BRAND_CODE",
@@ -12,32 +11,32 @@ export function buildFilters(queryParams, request) {
     branch_code: "BRANCH_CODE",
   };
 
-  // 🔁 Handle multi-select filters
   for (const key in filterMap) {
-    const column = filterMap[key];
-    const values = queryParams[key];
+    if (query[key]) {
+      // convert "A,B,C" → ["A","B","C"]
+      const values = Array.isArray(query[key])
+        ? query[key]
+        : query[key].split(",");
 
-    if (Array.isArray(values) && values.length > 0) {
-      const placeholders = values.map((_, i) => `@${key}${i}`);
+      const params = values.map((_, i) => `@${key}${i}`);
+      conditions.push(`${filterMap[key]} IN (${params.join(",")})`);
 
-      conditions.push(`${column} IN (${placeholders.join(", ")})`);
-
-      values.forEach((obj, i) => {
-        request.input(`${key}${i}`, sql.VarChar, obj.value);
+      values.forEach((val, i) => {
+        request.input(`${key}${i}`, sql.VarChar, val.trim());
       });
     }
   }
 
-  // 📅 Date filters
-  if (queryParams.fromDate) {
+  // Date filters
+  if (query.fromDate) {
     conditions.push("VOCDATE >= @fromDate");
-    request.input("fromDate", sql.Date, queryParams.fromDate);
+    request.input("fromDate", sql.Date, query.fromDate);
   }
 
-  if (queryParams.toDate) {
+  if (query.toDate) {
     conditions.push("VOCDATE <= @toDate");
-    request.input("toDate", sql.Date, queryParams.toDate);
+    request.input("toDate", sql.Date, query.toDate);
   }
 
-  return conditions.join(" AND ");
+  return conditions.length ? conditions.join(" AND ") : "1=1";
 }
