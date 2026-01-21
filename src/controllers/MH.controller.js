@@ -279,17 +279,17 @@ export async function getCampaignAvgSpendTrend(req, res) {
   try {
     const pool = await getPool();
     const request = pool.request();
+
     const filters = buildFilters(req.query, request);
 
     const query = `
       SELECT
-        FORMAT(VOCDATE, 'yyyy-MM') AS Month,
+        CONVERT(char(7), VOCDATE, 120) AS Month,
         SUM(SALES) / NULLIF(COUNT(DISTINCT CUSTOMER), 0) AS AvgSpend
-
       FROM MIS_DASHBOARD_TBL
       WHERE VOCTYPE = 'POS'
         AND (${filters})
-      GROUP BY FORMAT(VOCDATE, 'yyyy-MM')
+      GROUP BY CONVERT(char(7), VOCDATE, 120)
       ORDER BY Month
     `;
 
@@ -297,10 +297,9 @@ export async function getCampaignAvgSpendTrend(req, res) {
     res.json({ data: result.recordset });
   } catch (err) {
     console.error("❌ Campaign Avg Spend Trend Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: err.message });
   }
 }
- 
 
 //12
 export async function getCampaignEffectiveness(req, res) {
