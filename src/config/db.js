@@ -32,7 +32,7 @@ if (isProduction) {
 } else {
   // 💻 LOCAL (SQL Authentication)
   config = {
-    user: process.env.LOCAL_DB_USER,
+    user: process.env.LOCAL_DB_USER, 
     password: process.env.LOCAL_DB_PASSWORD,
     server: process.env.LOCAL_DB_SERVER,
     database: process.env.LOCAL_DB_DATABASE,
